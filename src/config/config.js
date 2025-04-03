@@ -6,8 +6,6 @@ export const MONGODB_URI = process.env.MONGODB_URI
 
 export const PORT = Number(process.env.PORT)
 
-export const SECRET = process.env.SECRET
-
 export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET
 
 export const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY
