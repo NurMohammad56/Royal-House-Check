@@ -25,7 +25,12 @@ const userSchema = new Schema({
         enum: ["admin", "client"],
         default: "client",
     },
-})
+    refreshToken: {
+        type: String,
+    },
+},
+    { timestamps: true }
+)
 
 // Hashing password
 userSchema.pre("save", async function (next) {
