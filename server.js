@@ -1,16 +1,32 @@
-// Database and port
-dbconfig()
-  .then(() => {
-    app.on("error", (err) => {
-      console.log(`Error while listening on port: ${process.env.PORT}`, err);
-      throw err;
-    });
+import { PORT } from "./src/config/config.js"
+import express from 'express'
+import { notFoundHandler } from "./src/middleware/notFoundHandler.middleware.js"
+import errorHandler from "./src/middleware/errorHandler.middleware.js"
 
-    app.listen(process.env.PORT || 5003, () => {
-      console.log(`The server is listening on port ${process.env.PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log(`Error connecting to database`, err);
-    throw err;
-  });
+const app = express()
+
+app.use(express.json())
+
+app.get('/', (_, res) => {
+    return res.send('Welcome to security API!')
+})
+
+//handling all routes
+rootRouter(app)
+
+// not found route handler middleware
+app.use(notFoundHandler)
+
+//error handler middleware
+app.use(errorHandler);
+
+async function startServer() {
+
+    await connectDatabase()
+
+    app.listen(PORT, () => {
+        console.log(`Server listening on port ${PORT}`)
+    })
+}
+
+startServer()
