@@ -1,4 +1,5 @@
 import { Schema } from "mongoose";
+import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../config/config.js";
 
 const userSchema = new Schema({
     fullname: {
@@ -27,7 +28,6 @@ const userSchema = new Schema({
 // Hashing password
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
-    // const salt = await this.getSalt(10);
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
@@ -49,9 +49,9 @@ userSchema.methods.generateAccessToken = function () {
             fullname: this.fullname,
             email: this.email
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+            expiresIn: ACCESS_TOKEN_EXPIRY,
         }
     );
 };
@@ -64,9 +64,9 @@ userSchema.methods.generateRefreshToken = function () {
             fullname: this.fullname,
             email: this.email
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+            expiresIn: REFRESH_TOKEN_EXPIRY,
         }
     );
 };
