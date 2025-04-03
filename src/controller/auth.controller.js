@@ -22,6 +22,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 // Resister user
 export const register = async (req, res, next) => {
+
     try {
         const { fullname, email, password } = req.body;
 
@@ -40,6 +41,7 @@ export const register = async (req, res, next) => {
 
         return res.status(201).json({ status: true, message: "User registered successfully.", data: user });
     }
+
     catch (error) {
         next(error);
     }
