@@ -1,6 +1,5 @@
 import mongoose,{ Schema } from "mongoose";
 
-import { Schema } from "mongoose";
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../config/config.js";
 
 const userSchema = new Schema({
