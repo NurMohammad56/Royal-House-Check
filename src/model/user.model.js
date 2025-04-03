@@ -19,8 +19,8 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["admin", "user"],
-        default: "user",
+        enum: ["admin", "client"],
+        default: "client",
     },
 })
 
@@ -45,7 +45,9 @@ userSchema.methods.isPasswordValid = function (password) {
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
-            _id: this._id,
+            id: this._id,
+            fullname: this.fullname,
+            email: this.email
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
@@ -58,7 +60,9 @@ userSchema.methods.generateAccessToken = function () {
 userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
-            _id: this._id,
+            id: this._id,
+            fullname: this.fullname,
+            email: this.email
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
