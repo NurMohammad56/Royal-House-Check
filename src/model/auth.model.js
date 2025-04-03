@@ -3,11 +3,7 @@ import { Schema } from "mongoose";
 const authSchema = new Schema({
     username: {
         type: String,
-        required: true,
-        unique: true,
-        minlength: 5,
-        maxlength: 20,
-        match: /^[a-zA-Z0-9]+$/,
+        unique: true
     },
     password: {
         type: String,
@@ -15,9 +11,7 @@ const authSchema = new Schema({
     },
     email: {
         type: String,
-        required: true,
-        unique: true,
-        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        unique: true
     },
     role: {
         type: String,
