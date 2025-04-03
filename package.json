@@ -4,9 +4,9 @@
   "description": "",
   "type": "module",
   "main": "server.js",
-  "start": "nodemon server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
