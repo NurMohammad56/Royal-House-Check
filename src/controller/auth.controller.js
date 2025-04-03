@@ -1,9 +1,24 @@
+import { User } from "../model/user.model.js";
 
 export const register = async (req, res, next) => {
     try {
-        //code to register user goes here
-    }
+      const { fullname, email, password } = req.body;
 
+      if (!email || !password || !fullname) { 
+        return res.status(400).json({status:false, message: "All fields are required." })
+      }
+
+      const existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        return res.status(400).json({ status: false, message: "Email already exists." });
+      }
+
+      const user = new User({ fullname, email, password });
+      await user.save();
+
+      return res.status(201).json({ status: true, message: "User registered successfully.", data:user });
+    }
     catch (error) {
         next(error);
     }
