@@ -28,6 +28,14 @@ const userSchema = new Schema({
     refreshToken: {
         type: String,
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationCode: String,
+    verificationCodeExpires: Date,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
 },
     { timestamps: true }
 )
@@ -46,6 +54,22 @@ userSchema.methods.isPasswordValid = function (password) {
     }
 
     return bcrypt.compare(password, this.password);
+};
+
+// Generate verification code
+userSchema.methods.generateVerificationCode = function () {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verificationCode = crypto.createHash("sha256").update(code).digest("hex");
+    this.verificationCodeExpires = Date.now() + 10 * 60 * 1000;
+    return code;
+};
+
+// Generate password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordExpires = Date.now() + 15 * 60 * 1000; 
+    return resetToken;
 };
 
 // Generate ACCESS_TOKEN
