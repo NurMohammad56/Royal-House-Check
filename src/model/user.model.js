@@ -26,6 +26,26 @@ const userSchema = new Schema({
         enum: ["admin", "client", "staff"],
         default: "client",
     },
+    subscription: {
+        status: {
+            type: String,
+            enum: ["paid", "unpaid"],
+            default: "unpaid",
+        },
+        plan: {
+            type: String,
+            enum: ["basic", "professional", "enterprise"]
+        },
+        type: {
+            type: String,
+            enum: ["monthly subscription", "yearly subscription", "weekly subscription"],
+        },
+        amount: {
+            type: Number,
+            default: 0
+        },
+        
+    },
     refreshToken: {
         type: String,
     },
@@ -46,7 +66,7 @@ const userSchema = new Schema({
     },
     resetPasswordExpires: {
         type: Date
-    }
+    },
 },
     { timestamps: true }
 )
