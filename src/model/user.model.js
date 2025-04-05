@@ -1,9 +1,7 @@
-import mongoose,{ Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-
-
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../config/config.js";
 
 const userSchema = new Schema({
@@ -25,7 +23,7 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["admin", "client"],
+        enum: ["admin", "client", "staff"],
         default: "client",
     },
     refreshToken: {
@@ -35,10 +33,20 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    verificationCode: String,
-    verificationCodeExpires: Date,
-    resetPasswordToken: String,
-    resetPasswordExpires: Date
+    verificationCode: {
+        type: String,
+        trim: true
+    },
+    verificationCodeExpires: {
+        type: Date
+    },
+    resetPasswordToken: {
+        type: String,
+        trim: true
+    },
+    resetPasswordExpires: {
+        type: Date
+    }
 },
     { timestamps: true }
 )

@@ -336,61 +336,61 @@ export const verifyOTP = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
     try {
         const { password, confirmPassword } = req.body;
-        const   existedUser = req.user
+        const existedUser = req.user
 
-if (!password || !confirmPassword) {
-    return res.status(400).json({
-        status: false,
-        message: "Password and confirm password are required."
-    });
-}
+        if (!password || !confirmPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Password and confirm password are required."
+            });
+        }
 
-if (password !== confirmPassword) {
-    return res.status(400).json({
-        status: false,
-        message: "Passwords do not match."
-    });
-}
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Passwords do not match."
+            });
+        }
 
-const user = await User.findOne(existedUser);
+        const user = await User.findOne(existedUser);
 
-if (!user) {
-    return res.status(404).json({
-        status: false,
-        message: "User not found."
-    });
-}
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found."
+            });
+        }
 
-// Reset password
-user.password = password;
-await user.save();
+        // Reset password
+        user.password = password;
+        await user.save();
 
-// Send confirmation email
-const message = `
+        // Send confirmation email
+        const message = `
             Your password has been successfully changed.
             If you did not request this change, please contact us immediately.
         `;
 
-try {
-    await sendEmail({
-        email: user.email,
-        subject: "Password Changed Successfully",
-        message
-    });
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "Password Changed Successfully",
+                message
+            });
 
-    return res.status(200).json({
-        status: true,
-        message: "Password reset successfully."
-    });
-} catch (emailError) {
-    return res.status(500).json({
-        status: false,
-        message: "Password reset was successful, but we couldn't send the confirmation email."
-    });
-}
+            return res.status(200).json({
+                status: true,
+                message: "Password reset successfully."
+            });
+        } catch (emailError) {
+            return res.status(500).json({
+                status: false,
+                message: "Password reset was successful, but we couldn't send the confirmation email."
+            });
+        }
     } catch (error) {
-    next(error);
-}
+        next(error);
+    }
 };
 
 // Logout user
