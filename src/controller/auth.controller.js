@@ -348,38 +348,38 @@ export const resetPassword = async (req, res, next) => {
     }
 };
 
-// // Logout user
-// export const logout = async (req, res, next) => {
-//     try {
-//         const { refreshToken } = req.body;
+// Logout user
+export const logout = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
 
-//         if (!refreshToken) {
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Refresh token is required."
-//             });
-//         }
+        if (!refreshToken) {
+            return res.status(400).json({
+                status: false,
+                message: "Refresh token is required."
+            });
+        }
 
-//         const user = await User.findOne({ refreshToken });
-//         if (!user) {
-//             return res.status(404).json({
-//                 status: false,
-//                 message: "Invalid refresh token."
-//             });
-//         }
+        const user = await User.findOne({ refreshToken });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "Invalid refresh token."
+            });
+        }
 
-//         // Invalidate the refresh token
-//         user.refreshToken = undefined;
-//         await user.save();
+        // Invalidate the refresh token
+        user.refreshToken = undefined;
+        await user.save();
 
-//         return res.status(200).json({
-//             status: true,
-//             message: "Logged out successfully."
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+        return res.status(200).json({
+            status: true,
+            message: "Logged out successfully."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // export const refreshAccessToken = async (req, res, next) => {
 //     const { refreshToken } = req.body;
