@@ -26,12 +26,12 @@ const visitSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['routine check', 'follow up'],
-        default: 'routine check'
+        enum: ['routine check', 'follow up']
     },
     notes: {
         type: String,
-        trim: true
+        trim: true,
+        default: ""
     },
 })
 
