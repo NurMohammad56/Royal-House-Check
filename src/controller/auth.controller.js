@@ -381,54 +381,54 @@ export const logout = async (req, res, next) => {
     }
 };
 
-// export const refreshAccessToken = async (req, res, next) => {
-//     const { refreshToken } = req.body;
+export const refreshAccessToken = async (req, res, next) => {
+    const { refreshToken } = req.body;
 
-//     if (!refreshToken) {
-//         return res
-//             .status(500)
-//             .json({ status: false, message: "Refresh token not provided." });
-//     }
+    if (!refreshToken) {
+        return res
+            .status(500)
+            .json({ status: false, message: "Refresh token not provided." });
+    }
 
-//     const user = await User.findOne({ refreshToken });
-//     if (!user) {
-//         return res
-//             .status(403)
-//             .json({ status: false, message: "Invalid refresh token." });
-//     }
-//     try {
-//         const decodedToken = jwt.verify(
-//             refreshToken,
-//             process.env.REFRESH_TOKEN_SECRET
-//         );
+    const user = await User.findOne({ refreshToken });
+    if (!user) {
+        return res
+            .status(403)
+            .json({ status: false, message: "Invalid refresh token." });
+    }
+    try {
+        const decodedToken = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        );
 
-//         const user = await User.findById(decodedToken?.id);
+        const user = await User.findById(decodedToken?.id);
 
-//         // check if user is not available then throw error
-//         if (!user) {
-//             throw new ApiError(401, "Invalid refresh token");
-//         }
+        // check if user is not available then throw error
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
 
-//         // Matching refreshToken with user refreshToken
-//         if (user.refreshToken !== refreshToken) {
-//             throw new ApiError(401, "Refrsh token is expired or used");
-//         }
+        // Matching refreshToken with user refreshToken
+        if (user.refreshToken !== refreshToken) {
+            throw new ApiError(401, "Refrsh token is expired or used");
+        }
 
-//         // If the token is valid, generate a new access token and set the header
-//         const { accessToken, refreshToken: newRefreshToken } =
-//             await generateAccessAndRefreshToken(user.id);
+        // If the token is valid, generate a new access token and set the header
+        const { accessToken, refreshToken: newRefreshToken } =
+            await generateAccessAndRefreshToken(user.id);
 
-//         res.setHeader("Authorization", `Bearer ${accessToken}`);
+        res.setHeader("Authorization", `Bearer ${accessToken}`);
 
-//         return res.status(200).json({
-//             status: true,
-//             message: "Access token refreshed successfully",
-//             accessToken,
-//             newRefreshToken,
-//         });
-//     }
+        return res.status(200).json({
+            status: true,
+            message: "Access token refreshed successfully",
+            accessToken,
+            newRefreshToken,
+        });
+    }
 
-//     catch (error) {
-//         next(error);
-//     }
-// }
+    catch (error) {
+        next(error);
+    }
+}
