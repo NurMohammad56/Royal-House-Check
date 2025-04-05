@@ -1,4 +1,5 @@
 import { User } from "../model/user.model.js";
+import { sendEmail } from "../utils/email.utils.js";
 
 
 // Generate access and refresh tokens
@@ -19,144 +20,59 @@ const generateAccessAndRefreshToken = async (userId) => {
         };
     }
 };
-// Resister user
+
+// Register user with 2-step verification
 export const register = async (req, res, next) => {
-
     try {
-        const { fullname, email, password } = req.body;
+        const { fullname, email, password, confirmPassword } = req.body;
 
-        if (!email || !password || !fullname) {
-            return res.status(400).json({ status: false, message: "All fields are required." })
-        }
-
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
-            return res.status(400).json({ status: false, message: "Email already exists." });
-        }
-
-        const user = new User({ fullname, email, password });
-        await user.save();
-
-        return res.status(201).json({ status: true, message: "User registered successfully.", data: user });
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
-
-// Login user
-export const login = async (req, res, next) => {
-    try {
-        const { fullname, email, password } = req.body;
-        if (!email || !password || !fullname) {
+        // Validation
+        if (!email || !password || !fullname || !confirmPassword) {
             return res.status(400).json({
                 status: false,
                 message: "All fields are required."
             });
         }
 
-        const user = await User.findOne({ email });
-
-
-        if (!user || !(await user.isPasswordValid(password))) {
-            return res.status(401).json({
+        if (password !== confirmPassword) {
+            return res.status(400).json({
                 status: false,
-                message: "Invalid email or password."
+                message: "Password and confirm password do not match."
             });
         }
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-        res.setHeader("Authorization", `Bearer ${accessToken}`);
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({
+                status: false,
+                message: "Email already exists."
+            });
+        }
 
+        // Create user
+        const user = new User({ fullname, email, password });
+        const verificationCode = user.generateVerificationCode();
+        await user.save();
 
-        return res.json({
-            status: true,
-            message: "Logged in successfully.",
-            accessToken,
-            refreshToken
+        // Send verification email
+        const message = `Your verification code is: ${verificationCode}\nThis code will expire in 10 minutes.`;
+        await sendEmail({
+            email: user.email,
+            subject: "Verify Your Account",
+            message
         });
-    }
 
-    catch (error) {
-        next(error);
-    }
-}
-
-// logout user
-export const logout = async (req, res, next) => {
-    try {
-        const user = req.user;
-
-        if (!user) {
-            return res
-                .status(400)
-                .json({ status: false, message: "User not found." });
-        }
-
-        // Remove refreshToken from the database (user logout)
-        await User.findByIdAndUpdate(user._id, { refreshToken: null });
-
-        return res
-            .status(200)
-            .json({ status: true, message: "Logged out successfully" });
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
-
-// Refresh access token
-export const refreshAccessToken = async (req, res, next) => {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-        return res
-            .status(500)
-            .json({ status: false, message: "Refresh token not provided." });
-    }
-
-    const user = await User.findOne({ refreshToken });
-    if (!user) {
-        return res
-            .status(403)
-            .json({ status: false, message: "Invalid refresh token." });
-    }
-    try {
-        const decodedToken = jwt.verify(
-            refreshToken,
-            process.env.REFRESH_TOKEN_SECRET
-        );
-
-        const user = await User.findById(decodedToken?.id);
-
-        // check if user is not available then throw error
-        if (!user) {
-            throw new ApiError(401, "Invalid refresh token");
-        }
-
-        // Matching refreshToken with user refreshToken
-        if (user.refreshToken !== refreshToken) {
-            throw new ApiError(401, "Refrsh token is expired or used");
-        }
-
-        // If the token is valid, generate a new access token and set the header
-        const { accessToken, refreshToken: newRefreshToken } =
-            await generateAccessAndRefreshToken(user.id);
-
-        res.setHeader("Authorization", `Bearer ${accessToken}`);
-
-        return res.status(200).json({
+        return res.status(201).json({
             status: true,
-            message: "Access token refreshed successfully",
-            accessToken,
-            newRefreshToken,
+            message: "Verification code sent to your email. Please verify to complete registration.",
+            data: {
+                email: user.email,
+                fullname: user.fullname
+            }
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
+
+
