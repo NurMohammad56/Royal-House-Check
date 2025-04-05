@@ -1,5 +1,7 @@
 import { User } from "../model/user.model.js";
 import { sendEmail } from "../utils/email.utils.js";
+import crypto from "crypto";
+import jwt from "jsonwebtoken"
 
 
 // Generate access and refresh tokens
@@ -249,32 +251,31 @@ export const forgetPassword = async (req, res, next) => {
             });
         }
 
-        const resetToken = user.generatePasswordResetToken();
+        const resetCode = user.generateVerificationCode();
         await user.save({ validateBeforeSave: false });
 
-        // Send reset email
-        const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
+        // Send reset code email
         const message = `
-            You are receiving this email because you (or someone else) requested a password reset for your account.
-            Please click the link below to reset your password:
-            ${resetUrl}
-            If you did not request this, please ignore this email. This link will expire in 15 minutes.
+            You are receiving this email because you requested a password reset for your account.
+            Your password reset code is: ${resetCode}
+            This code will expire in 15 minutes.
+            If you did not request this, please ignore this email.
         `;
 
         try {
             await sendEmail({
                 email: user.email,
-                subject: "Password Reset Request",
+                subject: "Password Reset Code",
                 message
             });
 
             return res.status(200).json({
                 status: true,
-                message: "Password reset link sent to your email."
+                message: "Password reset code sent to your email."
             });
         } catch (emailError) {
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
+            user.verificationCode = undefined;
+            user.verificationCodeExpires = undefined;
             await user.save({ validateBeforeSave: false });
 
             return res.status(500).json({
@@ -287,65 +288,109 @@ export const forgetPassword = async (req, res, next) => {
     }
 };
 
+// Verify OTP
+export const verifyOTP = async (req, res, next) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({
+                status: false,
+                message: "Verification code is required."
+            });
+        }
+
+        const user = await User.findOne({
+            verificationCode: crypto.createHash("sha256").update(code).digest("hex")
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "Invalid or expired verification code."
+            });
+        }
+
+        if (user.verificationCodeExpires < Date.now()) {
+            return res.status(400).json({
+                status: false,
+                message: "Verification code has expired."
+            });
+        }
+
+        // Clear verification code
+        user.verificationCode = undefined;
+        user.verificationCodeExpires = undefined;
+        await user.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "Verification code is valid."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Reset password
 export const resetPassword = async (req, res, next) => {
     try {
         const { password, confirmPassword } = req.body;
+        const   existedUser = req.user
 
-        if (!password || !confirmPassword) {
-            return res.status(400).json({
-                status: false,
-                message: "Password and confirm password are required."
-            });
-        }
+if (!password || !confirmPassword) {
+    return res.status(400).json({
+        status: false,
+        message: "Password and confirm password are required."
+    });
+}
 
-        if (password !== confirmPassword) {
-            return res.status(400).json({
-                status: false,
-                message: "Passwords do not match."
-            });
-        }
+if (password !== confirmPassword) {
+    return res.status(400).json({
+        status: false,
+        message: "Passwords do not match."
+    });
+}
 
-        const user = req.user;
+const user = await User.findOne(existedUser);
 
-        if (!user) {
-            return res.status(401).json({
-                status: false,
-                message: "Unauthorized access."
-            });
-        }
+if (!user) {
+    return res.status(404).json({
+        status: false,
+        message: "User not found."
+    });
+}
 
-        user.password = password;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        await user.save();
+// Reset password
+user.password = password;
+await user.save();
 
-        // Send confirmation email
-        const message = `
+// Send confirmation email
+const message = `
             Your password has been successfully changed.
             If you did not request this change, please contact us immediately.
         `;
 
-        try {
-            await sendEmail({
-                email: user.email,
-                subject: "Password Changed Successfully",
-                message
-            });
+try {
+    await sendEmail({
+        email: user.email,
+        subject: "Password Changed Successfully",
+        message
+    });
 
-            return res.status(200).json({
-                status: true,
-                message: "Password reset successfully."
-            });
-        } catch (emailError) {
-            return res.status(500).json({
-                status: false,
-                message: "Password reset was successful, but we couldn't send the confirmation email."
-            });
-        }
+    return res.status(200).json({
+        status: true,
+        message: "Password reset successfully."
+    });
+} catch (emailError) {
+    return res.status(500).json({
+        status: false,
+        message: "Password reset was successful, but we couldn't send the confirmation email."
+    });
+}
     } catch (error) {
-        next(error);
-    }
+    next(error);
+}
 };
 
 // Logout user
@@ -381,6 +426,7 @@ export const logout = async (req, res, next) => {
     }
 };
 
+// Refresh access token
 export const refreshAccessToken = async (req, res, next) => {
     const { refreshToken } = req.body;
 
@@ -432,6 +478,3 @@ export const refreshAccessToken = async (req, res, next) => {
         next(error);
     }
 }
-
-
-

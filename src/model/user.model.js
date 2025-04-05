@@ -1,4 +1,7 @@
 import mongoose,{ Schema } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../config/config.js";
@@ -62,14 +65,6 @@ userSchema.methods.generateVerificationCode = function () {
     this.verificationCode = crypto.createHash("sha256").update(code).digest("hex");
     this.verificationCodeExpires = Date.now() + 10 * 60 * 1000;
     return code;
-};
-
-// Generate password reset token
-userSchema.methods.generatePasswordResetToken = function () {
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-    this.resetPasswordExpires = Date.now() + 15 * 60 * 1000; 
-    return resetToken;
 };
 
 // Generate ACCESS_TOKEN
