@@ -75,4 +75,5 @@ export const register = async (req, res, next) => {
     }
 };
 
+// Verify registration code
 
