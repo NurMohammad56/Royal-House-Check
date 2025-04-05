@@ -230,123 +230,123 @@ export const verifyLogin = async (req, res, next) => {
 };
 
 // Forget password
-// export const forgetPassword = async (req, res, next) => {
-//     try {
-//         const { email } = req.body;
+export const forgetPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
 
-//         if (!email) {
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Email is required."
-//             });
-//         }
+        if (!email) {
+            return res.status(400).json({
+                status: false,
+                message: "Email is required."
+            });
+        }
 
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(404).json({
-//                 status: false,
-//                 message: "User not found."
-//             });
-//         }
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found."
+            });
+        }
 
-//         const resetToken = user.generatePasswordResetToken();
-//         await user.save({ validateBeforeSave: false });
+        const resetToken = user.generatePasswordResetToken();
+        await user.save({ validateBeforeSave: false });
 
-//         // Send reset email
-//         const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
-//         const message = `
-//             You are receiving this email because you (or someone else) requested a password reset for your account.
-//             Please click the link below to reset your password:
-//             ${resetUrl}
-//             If you did not request this, please ignore this email. This link will expire in 15 minutes.
-//         `;
+        // Send reset email
+        const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
+        const message = `
+            You are receiving this email because you (or someone else) requested a password reset for your account.
+            Please click the link below to reset your password:
+            ${resetUrl}
+            If you did not request this, please ignore this email. This link will expire in 15 minutes.
+        `;
 
-//         try {
-//             await sendEmail({
-//                 email: user.email,
-//                 subject: "Password Reset Request",
-//                 message
-//             });
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "Password Reset Request",
+                message
+            });
 
-//             return res.status(200).json({
-//                 status: true,
-//                 message: "Password reset link sent to your email."
-//             });
-//         } catch (emailError) {
-//             user.resetPasswordToken = undefined;
-//             user.resetPasswordExpires = undefined;
-//             await user.save({ validateBeforeSave: false });
+            return res.status(200).json({
+                status: true,
+                message: "Password reset link sent to your email."
+            });
+        } catch (emailError) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save({ validateBeforeSave: false });
 
-//             return res.status(500).json({
-//                 status: false,
-//                 message: "There was an error sending the email. Please try again later."
-//             });
-//         }
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+            return res.status(500).json({
+                status: false,
+                message: "There was an error sending the email. Please try again later."
+            });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
 
-// // Reset password
-// export const resetPassword = async (req, res, next) => {
-//     try {
-//         const { password, confirmPassword } = req.body;
+// Reset password
+export const resetPassword = async (req, res, next) => {
+    try {
+        const { password, confirmPassword } = req.body;
 
-//         if (!password || !confirmPassword) {
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Password and confirm password are required."
-//             });
-//         }
+        if (!password || !confirmPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Password and confirm password are required."
+            });
+        }
 
-//         if (password !== confirmPassword) {
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Passwords do not match."
-//             });
-//         }
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Passwords do not match."
+            });
+        }
 
-//         const user = req.user;
+        const user = req.user;
 
-//         if (!user) {
-//             return res.status(401).json({
-//                 status: false,
-//                 message: "Unauthorized access."
-//             });
-//         }
+        if (!user) {
+            return res.status(401).json({
+                status: false,
+                message: "Unauthorized access."
+            });
+        }
 
-//         user.password = password;
-//         user.resetPasswordToken = undefined;
-//         user.resetPasswordExpires = undefined;
-//         await user.save();
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
 
-//         // Send confirmation email
-//         const message = `
-//             Your password has been successfully changed.
-//             If you did not request this change, please contact us immediately.
-//         `;
+        // Send confirmation email
+        const message = `
+            Your password has been successfully changed.
+            If you did not request this change, please contact us immediately.
+        `;
 
-//         try {
-//             await sendEmail({
-//                 email: user.email,
-//                 subject: "Password Changed Successfully",
-//                 message
-//             });
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "Password Changed Successfully",
+                message
+            });
 
-//             return res.status(200).json({
-//                 status: true,
-//                 message: "Password reset successfully."
-//             });
-//         } catch (emailError) {
-//             return res.status(500).json({
-//                 status: false,
-//                 message: "Password reset was successful, but we couldn't send the confirmation email."
-//             });
-//         }
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+            return res.status(200).json({
+                status: true,
+                message: "Password reset successfully."
+            });
+        } catch (emailError) {
+            return res.status(500).json({
+                status: false,
+                message: "Password reset was successful, but we couldn't send the confirmation email."
+            });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
 
 // // Logout user
 // export const logout = async (req, res, next) => {
