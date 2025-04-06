@@ -129,6 +129,25 @@ export const getAllCancelledVisits = async (_, res, next) => {
     }
 }
 
+export const updateVisit = async (req, res, next) => {
+    const { id } = req.params
+    const { staff, address, date, type, notes } = req.body
+
+    try {
+        const visit = await Visit.findByIdAndUpdate(id, { staff, address, date, type, notes }, { new: true }).select("-client -status -notes")
+
+        return res.status(200).json({
+            status: true,
+            message: "Visit updated successfully",
+            data: visit
+        })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
 export const updateVisitStaff = async (req, res, next) => {
     const { id } = req.params
     const { staffId } = req.body
