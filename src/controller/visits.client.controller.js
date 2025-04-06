@@ -1,4 +1,5 @@
 import { Visit } from "../model/visit.model.js"
+import { createCode } from "../services/visit.services.js"
 import { generateCode } from "../utils/generateCode.js"
 
 export const createVisit = async (req, res, next) => {
@@ -14,13 +15,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        let code;
-
-        do {
-            code = generateCode();
-
-            visit = await Visit.findOne({ visitCode: code });
-        } while (visit)
+        const code = await createCode(next)
 
         const visit = await Visit.create({ visitCode: code, client, address, date, type })
 
