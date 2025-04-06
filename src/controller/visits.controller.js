@@ -19,10 +19,10 @@ export const createVisit = async (req, res, next) => {
         do {
             code = generateCode();
 
-            visit = await Visit.findOne({ visitId: code });
+            visit = await Visit.findOne({ visitCode: code });
         } while (visit)
 
-        const visit = await Visit.create({ visitId: code, client, address, date, type })
+        const visit = await Visit.create({ visitCode: code, client, address, date, type })
 
         return res.status(201).json({
             status: true,
@@ -35,6 +35,23 @@ export const createVisit = async (req, res, next) => {
         next(error)
     }
 }
+
+export const getAllVisitsCount = async (_, res, next) => {
+
+    try {
+        const totalVisits = await Visit.countDocuments();
+
+        return res.status(200).json({
+            status: true,
+            message: "Total visits count fetched successfully",
+            total: totalVisits
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+};
 
 export const getUpcomingVisits = async (_, res, next) => {
 
@@ -51,6 +68,23 @@ export const getUpcomingVisits = async (_, res, next) => {
             message: "Upcoming visits fetched successfully",
             data: visits
         })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getPendingVisitsCount = async (req, res, next) => {
+
+    try {
+        const totalVisits = await Visit.countDocuments({ status: "pending" });
+
+        return res.status(200).json({
+            status: true,
+            message: "Total pending visits count fetched successfully",
+            total: totalVisits
+        });
     }
 
     catch (error) {
@@ -190,6 +224,49 @@ export const updateVisitNotes = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Visit notes updated successfully"
+        })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const addIssue = async (req, res, next) => {
+    const { id } = req.params
+    const { issue, type, media, notes } = req.body
+
+    try {
+        await Visit.findByIdAndUpdate(id, { $push: { issues: { issue, type, media, notes } } })
+
+        return res.status(200).json({
+            status: true,
+            message: "Issue added successfully"
+        })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getAllIssues = async (req, res, next) => {
+    const { id } = req.params
+
+    try {
+        const { issues } = await Visit.findById(id).select("issues")
+
+        if (!issues) {
+            return res.status(404).json({
+                status: false,
+                message: "No issues found"
+            })
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Issues fetched successfully",
+            data: issues
         })
     }
 

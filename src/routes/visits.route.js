@@ -1,17 +1,21 @@
 import { Router } from "express";
-import { createVisit, getCancelledVisits, getSuccessfulVisits, getUpcomingVisits, getVisitById, updateVisit, updateVisitNotes, updateVisitStaff, updateVisitStatus } from "../controller/visits.controller.js";
+import { addIssue, createVisit, getAllIssues, getAllVisitsCount, getCancelledVisits, getPendingVisitsCount, getSuccessfulVisits, getUpcomingVisits, getVisitById, updateVisit, updateVisitNotes, updateVisitStaff, updateVisitStatus } from "../controller/visits.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 router.post('/create-visit', verifyJWT, createVisit);
+router.get('/get-all-visits-count', verifyJWT, getAllVisitsCount);
 router.get('/get-upcoming-visits', verifyJWT, getUpcomingVisits);
+router.get('/get-pending-visits-count', verifyJWT, getPendingVisitsCount);
 router.get('/get-successful-visits', verifyJWT, getSuccessfulVisits);
 router.get('/get-cancelled-visits', verifyJWT, getCancelledVisits)
 router.get('/get-visit/:id', verifyJWT, getVisitById)
+router.get('/get-all-issues/:id', verifyJWT, getAllIssues)
 router.patch('/update-visit/:id', verifyJWT, updateVisit);
 router.patch('/update-visit-status/:id', verifyJWT, updateVisitStatus);
 router.patch('/update-visit-staff/:id', verifyJWT, updateVisitStaff);
 router.patch('/update-visit-notes/:id', verifyJWT, updateVisitNotes);
+router.patch('/update-add-issue/:id', verifyJWT, addIssue)
 
 export default router;

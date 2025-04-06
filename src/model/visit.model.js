@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
 
-    visitId: {
+    visitCode: {
         type: String,
         required: true,
     },
@@ -43,7 +43,31 @@ const visitSchema = new Schema({
         type: String,
         trim: true,
         default: ""
-    }
+    },
+    issues: [{
+        issue: {
+            type: String,
+            trim: true
+        },
+        type: {
+            type: String,
+            enum: ["warning", "red alert"]
+        },
+        media: [{
+            type: {
+                type: String,
+                enum: ["photo", "video"]
+            },
+            url: {
+                type: String,
+                trim: true
+            }
+        }],
+        notes: {
+            type: String,
+            trim: true
+        }
+    }]
 
 }, { timestamps: true })
 
