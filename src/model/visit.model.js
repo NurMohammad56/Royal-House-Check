@@ -26,7 +26,7 @@ const visitSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['routine check', 'follow up']
+        enum: ['routine check', "Emergency", 'follow up']
     },
     notes: {
         type: String,
