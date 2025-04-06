@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
+
+    visitId: {
+        type: String,
+        required: true,
+    },
     client: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -21,12 +26,18 @@ const visitSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['successful', 'pending', 'cancelled', "confirmed"],
+        enum: ['complete', 'pending', 'cancelled', "confirmed"],
         default: 'pending'
+    },
+    cancellationReason: {
+        type: String,
+        trim: true,
+        default: ''
     },
     type: {
         type: String,
-        enum: ['routine check', "Emergency", 'follow up']
+        enum: ['routine check', "Emergency", 'follow up'],
+        required: true
     },
     notes: {
         type: String,
