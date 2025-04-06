@@ -32,7 +32,8 @@ const visitSchema = new Schema({
         type: String,
         trim: true,
         default: ""
-    },
-})
+    }
 
-export const Visit = mongoose.model("Visit", visitSchema);
+}, { timestamps: true })
+
+export const Visit = mongoose.model("Visit", visitSchema)
