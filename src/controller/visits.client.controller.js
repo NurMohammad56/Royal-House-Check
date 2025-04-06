@@ -36,23 +36,6 @@ export const createVisit = async (req, res, next) => {
     }
 }
 
-export const getAllVisitsCount = async (_, res, next) => {
-
-    try {
-        const totalVisits = await Visit.countDocuments();
-
-        return res.status(200).json({
-            status: true,
-            message: "Total visits count fetched successfully",
-            total: totalVisits
-        });
-    }
-
-    catch (error) {
-        next(error);
-    }
-};
-
 export const getUpcomingVisits = async (_, res, next) => {
 
     const client = req.user._id
@@ -68,23 +51,6 @@ export const getUpcomingVisits = async (_, res, next) => {
             message: "Upcoming visits fetched successfully",
             data: visits
         })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const getPendingVisitsCount = async (req, res, next) => {
-
-    try {
-        const totalVisits = await Visit.countDocuments({ status: "pending" });
-
-        return res.status(200).json({
-            status: true,
-            message: "Total pending visits count fetched successfully",
-            total: totalVisits
-        });
     }
 
     catch (error) {
