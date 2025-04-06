@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createVisit, getAllCancelledVisits, getAllCompleteVisits, getAllConfirmedVisits, getAllPendingVisits, getAllVisitsCount, getPendingVisitsCount, updateVisitStaff } from "../controller/visits.admin.controller.js";
+import { createVisit, getAllCancelledVisits, getAllCompleteVisits, getAllConfirmedVisits, getAllPendingVisits, getAllVisitsCount, getPendingVisitsCount, updateVisit, updateVisitStaff } from "../controller/visits.admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
