@@ -161,24 +161,6 @@ export const updateVisitStatus = async (req, res, next) => {
     }
 }
 
-export const updateVisitStaff = async (req, res, next) => {
-    const { id } = req.params
-    const { staffId } = req.body
-
-    try {
-        await Visit.findByIdAndUpdate(id, { staff: staffId })
-
-        return res.status(200).json({
-            status: true,
-            message: "Visit staff updated successfully"
-        })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
 export const updateVisitNotes = async (req, res, next) => {
 
     const { id } = req.params

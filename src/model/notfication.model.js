@@ -11,7 +11,7 @@ const notificationSchema = new Schema({
     notifications: [{
         type: {
             type: String,
-            enum: ["visit schedule", "new message", "visit update"]
+            enum: ["visit schedule", "new message", "visit update", "plan"]
         },
         message: {
             type: String,
