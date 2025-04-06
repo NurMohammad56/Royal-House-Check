@@ -1,13 +1,11 @@
 import { Router } from "express";
-import { createVisit, getAllVisitsCount, getCancelledVisits, getPendingVisitsCount, getSuccessfulVisits, getUpcomingVisits, getVisitById, updateVisit, updateVisitNotes, updateVisitStaff, updateVisitStatus } from "../controller/visits.client.controller.js";
+import { createVisit, getCancelledVisits, getSuccessfulVisits, getUpcomingVisits, getVisitById, updateVisit, updateVisitNotes, updateVisitStaff, updateVisitStatus } from "../controller/visits.client.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 router.post('/create-visit', verifyJWT, createVisit);
-router.get('/get-all-visits-count', verifyJWT, getAllVisitsCount);
 router.get('/get-upcoming-visits', verifyJWT, getUpcomingVisits);
-router.get('/get-pending-visits-count', verifyJWT, getPendingVisitsCount);
 router.get('/get-successful-visits', verifyJWT, getSuccessfulVisits);
 router.get('/get-cancelled-visits', verifyJWT, getCancelledVisits)
 router.get('/get-visit/:id', verifyJWT, getVisitById)
