@@ -1,6 +1,5 @@
 import { Visit } from "../model/visit.model.js"
 import { createCode } from "../services/visit.services.js"
-import { generateCode } from "../utils/generateCode.js"
 
 export const createVisit = async (req, res, next) => {
 
@@ -31,15 +30,29 @@ export const createVisit = async (req, res, next) => {
     }
 }
 
-export const getUpcomingVisits = async (_, res, next) => {
+export const getConfirmedVisits = async (_, res, next) => {
 
     const client = req.user._id
     try {
-        const visits = await Visit.find({
-            client, date: { $gte: Date.now() }, $or: [
-                { status: "confirmed" },
-                { status: "pending" }]
-        }).select("-staff -address -type -notes")
+        const visits = await Visit.find({ client, status: "confirmed" }).select("-staff -address -type -notes")
+
+        return res.status(200).json({
+            status: true,
+            message: "Upcoming visits fetched successfully",
+            data: visits
+        })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getPendingVisits = async (_, res, next) => {
+
+    const client = req.user._id
+    try {
+        const visits = await Visit.find({ client, status: "pending" }).select("-staff -address -type -notes")
 
         return res.status(200).json({
             status: true,
