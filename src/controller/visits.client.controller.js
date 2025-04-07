@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { Visit } from "../model/visit.model.js"
 import { createCode, getVisits } from "../services/visit.services.js"
 
@@ -97,10 +98,14 @@ export const getVisitById = async (req, res, next) => {
     const { id } = req.params
 
     try {
-        const visit = await Visit.findById(id)
+
+        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("-createdAt -updatedAt -__v")
 
         if (!visit) {
-            return res.status(404).json({ message: "Visit not found" })
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            });
         }
 
         return res.status(200).json({
@@ -118,33 +123,52 @@ export const getVisitById = async (req, res, next) => {
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
     const { address, date, type } = req.body
+    const client = req.user.id
 
     try {
-        const visit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-client -status -notes")
+
+        //checking if the provided date is in the future
+        if (new Date(date).getTime() < new Date().getTime()) {
+            return res.status(400).json({
+                status: false,
+                message: "Visit date must be in the future"
+            })
+        }
+
+        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status")
+
+        //checking if the visit id is valid or not
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            });
+        }
+
+        //checking if the visit is completed or cancelled
+        if (visit.status === "completed" || visit.status === "cancelled") {
+            return res.status(403).json({
+                status: false,
+                message: "You cannot update the visit which is completed or cancelled"
+            })
+        }
+
+        const existingVisit = await Visit.findOne({ date, client, $or: [{ status: "pending" }, { status: "confirmed" }] })
+
+        // checking if the visit date is already taken by another visit
+        if (existingVisit && existingVisit._id.toString() !== id) {
+            return res.status(400).json({
+                status: false,
+                message: "You already taken a visit in this date"
+            });
+        }
+
+        const updatedVisit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-createdAt -updatedAt -__v")
 
         return res.status(200).json({
             status: true,
             message: "Visit updated successfully",
-            data: visit
-        })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const updateVisitNotes = async (req, res, next) => {
-
-    const { id } = req.params
-    const { notes } = req.body
-
-    try {
-        await Visit.findByIdAndUpdate(id, { notes })
-
-        return res.status(200).json({
-            status: true,
-            message: "Visit notes updated successfully"
+            data: updatedVisit
         })
     }
 

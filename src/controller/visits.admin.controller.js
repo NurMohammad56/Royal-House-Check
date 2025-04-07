@@ -146,7 +146,7 @@ export const updateVisit = async (req, res, next) => {
 
     try {
 
-        if (type === "complete" || type === "cancelled") {
+        if (type === "completed" || type === "cancelled") {
             return res.status(400).json({
                 status: false,
                 message: "You cannot update the visit which is completed or cancelled"

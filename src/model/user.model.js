@@ -99,9 +99,6 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             id: this._id,
-            fullname: this.fullname,
-            email: this.email,
-            role: this.role
         },
         ACCESS_TOKEN_SECRET,
         {
@@ -115,9 +112,6 @@ userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
             id: this._id,
-            fullname: this.fullname,
-            email: this.email,
-            role: this.role
         },
         REFRESH_TOKEN_SECRET,
         {
