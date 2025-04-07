@@ -7,7 +7,11 @@ const planSchema = new Schema({
         unique: true,
         trim: true,
     },
-    amount: {
+    monthlyPrice: {
+        type: Number,
+        required: true,
+    },
+    yearlyPrice: {
         type: Number,
         required: true,
     },
