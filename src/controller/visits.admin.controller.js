@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js";
-import { createCode } from "../services/visit.services.js";
+import { createCode, getVisits } from "../services/visit.services.js";
 
 export const createVisit = async (req, res, next) => {
     const { client, staff, type, address, date } = req.body
@@ -48,7 +48,7 @@ export const getAllVisitsCount = async (_, res, next) => {
 export const getPendingVisitsCount = async (_, res, next) => {
 
     try {
-        const totalVisits = await Visit.countDocuments({ status: "pending" });
+        const totalVisits = await Visit.countDocuments({ status: "pending" })
 
         return res.status(200).json({
             status: true,
@@ -62,16 +62,12 @@ export const getPendingVisitsCount = async (_, res, next) => {
     }
 }
 
-export const getAllConfirmedVisits = async (_, res, next) => {
+export const getConfirmedVisits = async (_, res, next) => {
+
+    const { client } = req.body
 
     try {
-        const upcomingVisits = await Visit.find({ status: "confirmed" }).sort({ date: 1 })
-
-        return res.status(200).json({
-            status: true,
-            message: "All upcoming visits fetched successfully",
-            data: upcomingVisits
-        });
+        await getVisits(client, "confirmed", res, next)
     }
 
     catch (error) {
@@ -79,16 +75,12 @@ export const getAllConfirmedVisits = async (_, res, next) => {
     }
 }
 
-export const getAllPendingVisits = async (_, res, next) => {
+export const getPendingVisits = async (_, res, next) => {
+
+    const { client } = req.body
 
     try {
-        const upcomingVisits = await Visit.find({ status: "pending" }).sort({ date: 1 })
-
-        return res.status(200).json({
-            status: true,
-            message: "All upcoming visits fetched successfully",
-            data: upcomingVisits
-        });
+        await getVisits(client, "pending", res, next)
     }
 
     catch (error) {
@@ -96,16 +88,12 @@ export const getAllPendingVisits = async (_, res, next) => {
     }
 }
 
-export const getAllCompleteVisits = async (_, res, next) => {
+export const getCompletedVisits = async (_, res, next) => {
+
+    const { client } = req.body
 
     try {
-        const successfulVisits = await Visit.find({ status: "complete" }).sort({ date: 1 })
-
-        return res.status(200).json({
-            status: true,
-            message: "All successful visits fetched successfully",
-            data: successfulVisits
-        });
+        await getVisits(client, "complete", res, next)
     }
 
     catch (error) {
@@ -113,16 +101,12 @@ export const getAllCompleteVisits = async (_, res, next) => {
     }
 }
 
-export const getAllCancelledVisits = async (_, res, next) => {
+export const getCancelledVisits = async (_, res, next) => {
+
+    const { client } = req.body
 
     try {
-        const cancelledVisits = await Visit.find({ status: "cancelled" }).sort({ date: 1 })
-
-        return res.status(200).json({
-            status: true,
-            message: "All cancelled visits fetched successfully",
-            data: cancelledVisits
-        });
+        await getVisits(client, "cancelled", res, next)
     }
     catch (error) {
         next(error)
@@ -150,10 +134,10 @@ export const updateVisit = async (req, res, next) => {
 
 export const updateVisitStaff = async (req, res, next) => {
     const { id } = req.params
-    const { staffId } = req.body
+    const { staff } = req.body
 
     try {
-        await Visit.findByIdAndUpdate(id, { staff: staffId, status: "confirmed" })
+        await Visit.findByIdAndUpdate(id, { staff, status: "confirmed" })
 
         return res.status(200).json({
             status: true,
