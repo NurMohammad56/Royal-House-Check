@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js"
-import { createCode } from "../services/visit.services.js"
+import { createCode, getVisits } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
@@ -34,13 +34,7 @@ export const getConfirmedVisits = async (_, res, next) => {
 
     const client = req.user._id
     try {
-        const visits = await Visit.find({ client, status: "confirmed" }).select("-staff -address -type -notes")
-
-        return res.status(200).json({
-            status: true,
-            message: "Upcoming visits fetched successfully",
-            data: visits
-        })
+        await getVisits(client, "confirmed", res, next)
     }
 
     catch (error) {
@@ -52,13 +46,7 @@ export const getPendingVisits = async (_, res, next) => {
 
     const client = req.user._id
     try {
-        const visits = await Visit.find({ client, status: "pending" }).select("-staff -address -type -notes")
-
-        return res.status(200).json({
-            status: true,
-            message: "Upcoming visits fetched successfully",
-            data: visits
-        })
+        await getVisits(client, "pending", res, next)
     }
 
     catch (error) {
@@ -66,17 +54,11 @@ export const getPendingVisits = async (_, res, next) => {
     }
 }
 
-export const getSuccessfulVisits = async (req, res, next) => {
+export const getCompletedVisits = async (req, res, next) => {
 
     const client = req.user._id
     try {
-        const visits = await Visit.find({ client, date: { $lt: Date.now() }, status: "complete" })
-
-        return res.status(200).json({
-            status: true,
-            message: "Successful visits fetched successfully",
-            data: visits
-        })
+        await getVisits(client, "complete", res, next)
     }
 
     catch (error) {
@@ -88,13 +70,7 @@ export const getCancelledVisits = async (req, res, next) => {
 
     const client = req.user._id
     try {
-        const visits = await Visit.find({ client, date: { $lt: Date.now() }, status: "cancelled" })
-
-        return res.status(200).json({
-            status: true,
-            message: "Cancelled visits fetched successfully",
-            data: visits
-        })
+        await getVisits(client, "cancelled", res, next)
     }
 
     catch (error) {
