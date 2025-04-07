@@ -11,7 +11,7 @@ import {isAdmin} from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-router.get("/", verifyJWT, isAdmin, getAllPlans);
+router.get("/", verifyJWT, getAllPlans);
 router.post("/", verifyJWT, isAdmin, addPlan);
 router.put("/:id", verifyJWT, isAdmin, updatePlan);
 router.delete("/:id", verifyJWT, isAdmin, deletePlan);
