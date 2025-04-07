@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import axios from "axios";
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from "../config/config.js";
 
@@ -51,5 +52,36 @@ export const createPaypalOrder = async (amount, currency = "USD") => {
     } catch (error) {
         console.error("PayPal Order Creation Error:", error.response?.data || error.message);
         throw error;
+    }
+};
+export const verifyPaypalWebhook = (payload, headers, webhookSecret) => {
+    const transmissionId = headers["paypal-transmission-id"];
+    const timestamp = headers["paypal-transmission-time"];
+    const signature = headers["paypal-transmission-sig"];
+
+    const verified = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(transmissionId + timestamp + JSON.stringify(payload))
+        .digest("hex") === signature;
+
+    if (!verified) {
+        throw new Error("Invalid PayPal webhook signature");
+    }
+
+    return true;
+};
+
+export const handlePaypalEvent = async (eventType, payload, PaymentModel) => {
+    switch (eventType) {
+        case "BILLING.SUBSCRIPTION.CANCELLED":
+            // Deactivate the subscription when it ends
+            await PaymentModel.findOneAndUpdate(
+                { transactionId: payload.resource.id },
+                { isActive: false }
+            );
+            break;
+
+        default:
+            console.log(`Unhandled event type: ${eventType}`);
     }
 };
