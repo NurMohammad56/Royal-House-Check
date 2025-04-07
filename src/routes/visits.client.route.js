@@ -11,7 +11,6 @@ router.get('/get-successful-visits', verifyJWT, getCompletedVisits);
 router.get('/get-cancelled-visits', verifyJWT, getCancelledVisits)
 router.get('/get-visit/:id', verifyJWT, getVisitById)
 router.patch('/update-visit/:id', verifyJWT, updateVisit);
-router.patch('/update-visit-status/:id', verifyJWT, updateVisitStatus);
 router.patch('/update-visit-notes/:id', verifyJWT, updateVisitNotes);
 
 export default router;

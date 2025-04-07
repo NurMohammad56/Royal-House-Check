@@ -118,6 +118,14 @@ export const updateVisit = async (req, res, next) => {
     const { staff, address, date, type, notes } = req.body
 
     try {
+
+        if (type === "complete" || type === "cancelled") {
+            return res.status(400).json({
+                status: false,
+                message: "You cannot update the visit which is completed or cancelled"
+            })
+        }
+
         const visit = await Visit.findByIdAndUpdate(id, { staff, address, date, type, notes }, { new: true }).select("-client -status -notes")
 
         return res.status(200).json({
