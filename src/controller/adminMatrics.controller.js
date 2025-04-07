@@ -2,7 +2,7 @@ import {
     getTotalActivePlans,
     getMonthlyRevenue,
     getActiveDiscounts,
-} from "../services/adminMatricsServices.js";
+} from "../services/adminMatrics.services.js";
 
 export const totalActivePlansController = async (_, res, next) => {
     try {
