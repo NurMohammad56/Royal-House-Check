@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
+
+    visitCode: {
+        type: String,
+        required: true,
+    },
     client: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -21,8 +26,13 @@ const visitSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['successful', 'pending', 'cancelled', "confirmed"],
+        enum: ['complete', 'pending', 'cancelled', "confirmed"],
         default: 'pending'
+    },
+    cancellationReason: {
+        type: String,
+        trim: true,
+        default: ''
     },
     type: {
         type: String,
@@ -32,7 +42,31 @@ const visitSchema = new Schema({
         type: String,
         trim: true,
         default: ""
-    }
+    },
+    issues: [{
+        issue: {
+            type: String,
+            trim: true
+        },
+        type: {
+            type: String,
+            enum: ["warning", "red alert"]
+        },
+        media: [{
+            type: {
+                type: String,
+                enum: ["photo", "video"]
+            },
+            url: {
+                type: String,
+                trim: true
+            }
+        }],
+        notes: {
+            type: String,
+            trim: true
+        }
+    }]
 
 }, { timestamps: true })
 
