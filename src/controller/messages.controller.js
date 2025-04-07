@@ -72,10 +72,18 @@ export const getMessages = async (req, res, next) => {
         }).populate("messages.sender messages.receiver", "name email");
 
         if (!chat) {
-            return res.status(200).json({ success: true, data: [] });
+            return res.status(200).json({
+                status: true,
+                message: "No messages found",
+                data: []
+            });
         }
 
-        res.status(200).json({ success: true, data: chat.messages });
+        return res.status(200).json({
+            status: true,
+            message: "Messages retrieved successfully",
+            data: chat.messages
+        });
     } catch (error) {
         next(error);
     }
