@@ -104,7 +104,7 @@ export const getPendingVisitsCount = async (_, res, next) => {
     }
 }
 
-export const getConfirmedVisits = async (_, res, next) => {
+export const getConfirmedVisits = async (req, res, next) => {
 
     const { client } = req.body
 
@@ -117,7 +117,7 @@ export const getConfirmedVisits = async (_, res, next) => {
     }
 }
 
-export const getPendingVisits = async (_, res, next) => {
+export const getPendingVisits = async (req, res, next) => {
 
     const { client } = req.body
 
@@ -130,7 +130,7 @@ export const getPendingVisits = async (_, res, next) => {
     }
 }
 
-export const getCompletedVisits = async (_, res, next) => {
+export const getCompletedVisits = async (req, res, next) => {
 
     const { client } = req.body
 
@@ -143,7 +143,7 @@ export const getCompletedVisits = async (_, res, next) => {
     }
 }
 
-export const getCancelledVisits = async (_, res, next) => {
+export const getCancelledVisits = async (req, res, next) => {
 
     const { client } = req.body
 
