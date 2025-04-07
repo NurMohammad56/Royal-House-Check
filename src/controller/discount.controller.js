@@ -1,4 +1,4 @@
-import { Discount } from "../model/discount.model";
+import { Discount } from "../model/discount.model.js";
 
 export const getAllDiscounts = async (_, res, next) => {
     try {
