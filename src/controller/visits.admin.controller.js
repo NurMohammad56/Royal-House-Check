@@ -120,7 +120,7 @@ export const getCompletedVisits = async (_, res, next) => {
     const { client } = req.body
 
     try {
-        await getVisits(client, "complete", res, next)
+        await getVisits(client, "completed", res, next)
     }
 
     catch (error) {
