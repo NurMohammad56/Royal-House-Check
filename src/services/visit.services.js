@@ -26,7 +26,7 @@ export const createCode = async (next) => {
 export const getVisits = async (client, status, res, next) => {
 
     try {
-        const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v -_id").sort({ date: 1 })
+        const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v").sort({ date: 1 })
 
         return res.status(200).json({
             status: true,
