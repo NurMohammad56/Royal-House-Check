@@ -1,5 +1,5 @@
-import {Payment} from "../model/payment.model.js";
-import {Plan} from "../model/plan.model.js";
+import { Payment } from "../model/payment.model.js";
+import { Plan } from "../model/plan.model.js";
 import { initiatePayment } from "../services/payment.service.js";
 
 export const createPayment = async (req, res) => {
@@ -107,5 +107,30 @@ export const getPaymentHistory = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+export const deactivateSubscription = async (req, res, next) => {
+    try {
+        const { paymentId } = req.params;
+
+        // Find and update the subscription
+        const subscription = await Payment.findByIdAndUpdate(
+            paymentId,
+            { isActive: false },
+            { new: true }
+        );
+
+        if (!subscription) {
+            return res.status(404).json({ status: false, message: "Subscription not found" });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Subscription deactivated successfully",
+            data: subscription,
+        });
+    } catch (error) {
+        next(error);
     }
 };
