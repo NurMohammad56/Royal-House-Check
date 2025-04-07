@@ -2,7 +2,7 @@ import { verifyStripeWebhook, handleStripeEvent } from "../services/stripe.servi
 import { verifyPaypalWebhook, handlePaypalEvent } from "../services/paypal.service.js";
 import {Payment} from "../model/payment.model.js";
 
-export const stripeWebhook = async (req, res) => {
+export const stripeWebhook = async (req, res, next) => {
     try {
         const sig = req.headers["stripe-signature"];
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -13,14 +13,13 @@ export const stripeWebhook = async (req, res) => {
         // Handle the event
         await handleStripeEvent(event, Payment);
 
-        res.json({ received: true });
+        return res.json({ received: true });
     } catch (error) {
-        console.error(error);
-        res.status(400).send(`Webhook Error: ${error.message}`);
+        next(error);
     }
 };
 
-export const paypalWebhook = async (req, res) => {
+export const paypalWebhook = async (req, res, next) => {
     try {
         const payload = req.body;
         const headers = req.headers;
@@ -32,9 +31,8 @@ export const paypalWebhook = async (req, res) => {
         // Handle the event
         await handlePaypalEvent(payload.event_type, payload, Payment);
 
-        res.json({ received: true });
+        return res.json({ received: true });
     } catch (error) {
-        console.error(error);
-        res.status(400).send(`Webhook Error: ${error.message}`);
+        next(error);
     }
 };
