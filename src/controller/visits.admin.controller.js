@@ -1,4 +1,5 @@
 import { Visit } from "../model/visit.model.js";
+import { Notification } from "../model/notfication.model.js";
 import { createCode, getVisits } from "../services/visit.services.js";
 
 export const createVisit = async (req, res, next) => {
@@ -14,7 +15,33 @@ export const createVisit = async (req, res, next) => {
 
         const code = await createCode(next)
 
-        const visit = await Visit.create({ visitCode: code, client, staff, address, date, type })
+        const visit = await Visit.create({ visitCode: code, client, staff, address, date, type });
+
+        const formattedDate = new Date(date).toLocaleString("en-US", {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+
+        // Notify client
+        await Notification.create({
+            userId: client,
+            type: "visit schedule",
+            message: `Visit scheduled for ${formattedDate}`,
+        });
+
+        // Notify staff
+        if (staff) {
+            await Notification.create({
+                userId: staff,
+                type: "visit schedule",
+                message: `Visit scheduled for ${formattedDate}`,
+            });
+        }
 
         return res.status(201).json({
             status: true,
@@ -127,6 +154,32 @@ export const updateVisit = async (req, res, next) => {
         }
 
         const visit = await Visit.findByIdAndUpdate(id, { staff, address, date, type, notes }, { new: true }).select("-client -status -notes")
+
+        const formattedDate = new Date(visit.date).toLocaleString("en-US", {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+
+        // Notify client
+        await Notification.create({
+            userId: visit.client,
+            type: "visit update",
+            message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+        });
+
+        // Notify staff
+        if (visit.staff) {
+            await Notification.create({
+                userId: visit.staff,
+                type: "visit update",
+                message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+            });
+        }
 
         return res.status(200).json({
             status: true,
