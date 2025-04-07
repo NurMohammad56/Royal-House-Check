@@ -1,12 +1,47 @@
-import mongoose, {Schema} from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 
 const paymentSchema = new Schema({
-  client: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  amount: Number,
-  date: Date,
-  status: { type: String, enum: ['paid', 'failed', 'pending'], default: 'pending' },
-  method: String,
-  subscriptionPlan: String,
-}, { timestamps: true });
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    plan: {
+        type: Schema.Types.ObjectId,
+        ref: "Plan",
+        required: true,
+    },
+    amount: {
+        type: Number,
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ["successful", "failed"],
+        default: "successful",
+    },
+    transactionId: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    subscriptionType: {
+        type: String,
+        enum: ["monthly", "yearly", "weekly"],
+        required: true,
+    },
+    startDate: {
+        type: Date,
+        required: true,
+    },
+    endDate: {
+        type: Date,
+        required: true,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
 
-export const Payment = mongoose.model('Payment', paymentSchema);
+export const Payment = mongoose.model("Payment", paymentSchema);
