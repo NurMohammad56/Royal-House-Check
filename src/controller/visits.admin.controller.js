@@ -147,6 +147,32 @@ export const updateVisit = async (req, res, next) => {
     try {
         const visit = await Visit.findByIdAndUpdate(id, { staff, address, date, type, notes }, { new: true }).select("-client -status -notes")
 
+        const formattedDate = new Date(visit.date).toLocaleString("en-US", {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+
+        // Notify client
+        await Notification.create({
+            userId: visit.client,
+            type: "visit update",
+            message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+        });
+
+        // Notify staff
+        if (visit.staff) {
+            await Notification.create({
+                userId: visit.staff,
+                type: "visit update",
+                message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+            });
+        }
+
         return res.status(200).json({
             status: true,
             message: "Visit updated successfully",
