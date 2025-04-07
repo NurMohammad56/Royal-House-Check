@@ -13,7 +13,8 @@ const visitSchema = new Schema({
     },
     staff: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        default: null
     },
     address: {
         type: String,

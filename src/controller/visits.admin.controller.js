@@ -13,9 +13,25 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
+        if (new Date(date).getTime() < new Date().getTime()) {
+            return res.status(400).json({
+                status: false,
+                message: "Visit date must be in the future"
+            })
+        }
+
+        const visit = await Visit.findOne({ client, date })
+
+        if (visit) {
+            return res.status(400).json({
+                status: false,
+                message: "A visit with the same date already exists"
+            })
+        }
+
         const code = await createCode(next)
 
-        const visit = await Visit.create({ visitCode: code, client, staff, address, date, type });
+        await Visit.create({ visitCode: code, client, staff, address, date, type });
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
             weekday: "short",
@@ -45,8 +61,7 @@ export const createVisit = async (req, res, next) => {
 
         return res.status(201).json({
             status: true,
-            message: "Visit created successfully",
-            data: visit
+            message: "Visit created successfully"
         })
     }
 
@@ -146,7 +161,7 @@ export const updateVisit = async (req, res, next) => {
 
     try {
 
-        if (type === "complete" || type === "cancelled") {
+        if (type === "completed" || type === "cancelled") {
             return res.status(400).json({
                 status: false,
                 message: "You cannot update the visit which is completed or cancelled"
