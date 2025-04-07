@@ -153,7 +153,7 @@ export const login = async (req, res, next) => {
         }
 
         // Generate and send verification code
-        const verificationCode = user.generateVerificationCode();
+        const verificationCode = await user.generateVerificationCode();
         await user.save();
 
         // Send verification email
@@ -169,7 +169,7 @@ export const login = async (req, res, next) => {
             message: "Verification code sent to your email. Please verify to login.",
             data: {
                 email: user.email
-            }
+            },
         });
     } catch (error) {
         next(error);
@@ -224,7 +224,8 @@ export const verifyLogin = async (req, res, next) => {
                     fullname: user.fullname,
                     email: user.email
                 }
-            }
+            },
+            token: accessToken
         });
     } catch (error) {
         next(error);

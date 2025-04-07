@@ -4,7 +4,7 @@ import { createCode, getVisits } from "../services/visit.services.js"
 export const createVisit = async (req, res, next) => {
 
     const { address, date, type } = req.body
-    const client = req.user._id
+    const client = req.user.id
 
     try {
         if (!address || !date || !type) {
@@ -14,14 +14,29 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
+        if (new Date(date).getTime() < new Date().getTime()) {
+            return res.status(400).json({
+                status: false,
+                message: "Visit date must be in the future"
+            })
+        }
+
+        const visit = await Visit.findOne({ client, date })
+
+        if (visit) {
+            return res.status(400).json({
+                status: false,
+                message: "A visit with the same date already exists"
+            })
+        }
+
         const code = await createCode(next)
 
-        const visit = await Visit.create({ visitCode: code, client, address, date, type })
+        await Visit.create({ visitCode: code, client, address, date, type })
 
         return res.status(201).json({
             status: true,
-            message: "Visit created successfully",
-            data: visit
+            message: "Visit created successfully"
         })
     }
 
@@ -30,9 +45,9 @@ export const createVisit = async (req, res, next) => {
     }
 }
 
-export const getConfirmedVisits = async (_, res, next) => {
+export const getConfirmedVisits = async (req, res, next) => {
 
-    const client = req.user._id
+    const client = req.user.id
     try {
         await getVisits(client, "confirmed", res, next)
     }
@@ -42,9 +57,9 @@ export const getConfirmedVisits = async (_, res, next) => {
     }
 }
 
-export const getPendingVisits = async (_, res, next) => {
+export const getPendingVisits = async (req, res, next) => {
 
-    const client = req.user._id
+    const client = req.user.id
     try {
         await getVisits(client, "pending", res, next)
     }
@@ -56,9 +71,9 @@ export const getPendingVisits = async (_, res, next) => {
 
 export const getCompletedVisits = async (req, res, next) => {
 
-    const client = req.user._id
+    const client = req.user.id
     try {
-        await getVisits(client, "complete", res, next)
+        await getVisits(client, "completed", res, next)
     }
 
     catch (error) {
@@ -68,7 +83,7 @@ export const getCompletedVisits = async (req, res, next) => {
 
 export const getCancelledVisits = async (req, res, next) => {
 
-    const client = req.user._id
+    const client = req.user.id
     try {
         await getVisits(client, "cancelled", res, next)
     }

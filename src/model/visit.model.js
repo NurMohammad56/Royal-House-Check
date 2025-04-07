@@ -26,7 +26,7 @@ const visitSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['complete', 'pending', 'cancelled', "confirmed"],
+        enum: ['completed', 'pending', 'cancelled', "confirmed"],
         default: 'pending'
     },
     cancellationReason: {

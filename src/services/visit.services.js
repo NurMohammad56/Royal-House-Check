@@ -1,4 +1,5 @@
 import { Visit } from "../model/visit.model.js";
+import { generateCode } from "../utils/generateCode.js";
 
 
 export const createCode = async (next) => {
@@ -25,7 +26,7 @@ export const createCode = async (next) => {
 export const getVisits = async (client, status, res, next) => {
 
     try {
-        const visits = await Visit.find({ client, status })
+        const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v -_id").sort({ date: 1 })
 
         return res.status(200).json({
             status: true,
