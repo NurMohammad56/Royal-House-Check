@@ -2,19 +2,19 @@ import { Payment } from "../model/payment.model.js";
 import { Plan } from "../model/plan.model.js";
 import { initiatePayment } from "../services/payment.service.js";
 
-export const createPayment = async (req, res) => {
+export const createPayment = async (req, res, next) => {
     try {
         const { userId, planId, subscriptionType, paymentMethod } = req.body;
 
         // Validate inputs
         if (!userId || !planId || !subscriptionType || !paymentMethod) {
-            return res.status(400).json({ success: false, message: "Missing required fields" });
+            return res.status(400).json({ status: false, message: "Missing required fields" });
         }
 
         // Fetch the plan details
         const plan = await Plan.findById(planId);
         if (!plan) {
-            return res.status(404).json({ success: false, message: "Plan not found" });
+            return res.status(404).json({ status: false, message: "Plan not found" });
         }
 
         // Calculate the amount based on subscription type
@@ -30,7 +30,7 @@ export const createPayment = async (req, res) => {
             startDate = new Date();
             endDate = new Date(startDate.setFullYear(startDate.getFullYear() + 1));
         } else {
-            return res.status(400).json({ success: false, message: "Invalid subscription type" });
+            return res.status(400).json({ status: false, message: "Invalid subscription type" });
         }
 
         // Initiate payment with the selected method
@@ -41,24 +41,24 @@ export const createPayment = async (req, res) => {
             user: userId,
             plan: planId,
             amount,
-            status: "pending", // Payment is pending until confirmed by the gateway
+            status: "pending",
             transactionId: paymentDetails.orderId || null,
             subscriptionType,
             startDate,
             endDate,
         });
 
-        res.status(201).json({
-            success: true,
+        return res.status(201).json({
+            status: true,
+            message: "Payment initiated successfully",
             data: { ...paymentDetails, paymentId: payment._id },
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Server error" });
+        next(error);
     }
 };
 
-export const confirmPayment = async (req, res) => {
+export const confirmPayment = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
         const { paymentStatus } = req.body;
@@ -71,18 +71,17 @@ export const confirmPayment = async (req, res) => {
         );
 
         if (!payment) {
-            return res.status(404).json({ success: false, message: "Payment not found" });
+            return res.status(404).json({ status: false, message: "Payment not found" });
         }
 
-        res.status(200).json({ success: true, data: payment });
+        return res.status(200).json({ status: true, data: payment });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Server error" });
+        next(error);
     }
 };
 
 // Get Payment History
-export const getPaymentHistory = async (req, res) => {
+export const getPaymentHistory = async (req, res, next) => {
     try {
         const { page = 1, limit = 10 } = req.query;
 
@@ -95,8 +94,9 @@ export const getPaymentHistory = async (req, res) => {
 
         const totalPayments = await Payment.countDocuments();
 
-        res.status(200).json({
-            success: true,
+        return res.status(200).json({
+            status: true,
+            message: "Payment history retrieved successfully",
             data: payments,
             pagination: {
                 currentPage: parseInt(page),
@@ -105,8 +105,7 @@ export const getPaymentHistory = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Server error" });
+        next(error);
     }
 };
 
