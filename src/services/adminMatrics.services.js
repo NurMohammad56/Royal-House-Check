@@ -8,27 +8,36 @@ export const getTotalActivePlans = async () => {
 };
 
 export const getMonthlyRevenue = async () => {
-    const startOfMonth = moment().startOf("month").toDate();
-    const endOfMonth = moment().endOf("month").toDate();
+    const startOfMonth = moment().startOf('month').toDate();  
+    const endOfMonth = moment().endOf('month').toDate();      
 
-    const monthlyRevenue = await Payment.aggregate([
-        {
-            $match: {
-                status: "successful", 
-                createdAt: { $gte: startOfMonth, $lte: endOfMonth }, 
+    console.log("Start of month:", startOfMonth);
+    console.log("End of month:", endOfMonth);
+
+    try {
+        const monthlyRevenue = await Payment.aggregate([
+            {
+                $match: {
+                    status: "success", 
+                    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+                },
             },
-        },
-        {
-            $group: {
-                _id: null, 
-                totalAmount: { $sum: "$amount" }, 
+            {
+                $group: {
+                    _id: null,
+                    totalAmount: { $sum: "$amount" },
+                },
             },
-        },
-    ]);
+        ]);
 
-    return monthlyRevenue[0]?.totalAmount || 0; 
-};
 
+        // If there are no payments for the month, return 0
+        return monthlyRevenue[0]?.totalAmount || 0;
+    } catch (error) {
+        console.error("Error calculating monthly revenue:", error);
+        throw new Error("Error calculating monthly revenue");
+    }
+}
 export const getActiveDiscounts = async () => {
     return await Discount.countDocuments({ isActive: true });
 };
