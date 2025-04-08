@@ -17,20 +17,28 @@ export const addPlan = async (req, res, next) => {
     try {
         const { name, monthlyPrice, yearlyPrice, features } = req.body;
 
+
+        const featuresArray = typeof features === "string" ? features.split(",").map(f => f.trim()) : features;
+        // Parse and sanitize prices
+        const parsedMonthlyPrice = parseFloat(monthlyPrice.replace(/[^0-9.]/g, ""));
+        const parsedYearlyPrice = parseFloat(yearlyPrice.replace(/[^0-9.]/g, ""));
+
         // Validate yearlyPrice is 25% less than monthlyPrice for a year
-        const calculatedYearlyPrice = monthlyPrice * 12 * 0.75;
-        if (Math.abs(yearlyPrice - calculatedYearlyPrice) > 0.01) {
+        const expectedYearly = +(monthlyPrice * 12 * 0.75).toFixed(2); 
+        const givenYearly = +yearlyPrice;
+
+        if (givenYearly !== expectedYearly) {
             return res.status(400).json({
                 status: false,
-                message: "Yearly price must be 25% discounted compared to monthly price for a year.",
+                message: `Yearly price must be 25% discounted compared to monthly price for a year. Expected: ${expectedYearly}`,
             });
         }
 
         const plan = await Plan.create({
             name,
-            monthlyPrice,
-            yearlyPrice,
-            features,
+            monthlyPrice: parsedMonthlyPrice,
+            yearlyPrice: parsedYearlyPrice,
+            features: featuresArray,
         });
 
         return res.status(201).json({
@@ -42,16 +50,19 @@ export const addPlan = async (req, res, next) => {
         next(error);
     }
 };
-
 export const updatePlan = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const { name, monthlyPrice, yearlyPrice, features } = req.body;
+
+        // Parse and sanitize prices
+        const parsedMonthlyPrice = parseFloat(monthlyPrice.replace(/[^0-9.]/g, ""));
+        const parsedYearlyPrice = parseFloat(yearlyPrice.replace(/[^0-9.]/g, ""));
 
         // Validate yearlyPrice if updated
-        if (updates.yearlyPrice && updates.monthlyPrice) {
-            const calculatedYearlyPrice = updates.monthlyPrice * 12 * 0.75;
-            if (Math.abs(updates.yearlyPrice - calculatedYearlyPrice) > 0.01) {
+        if (parsedMonthlyPrice && parsedYearlyPrice) {
+            const calculatedYearlyPrice = parsedMonthlyPrice * 12 * 0.75;
+            if (Math.abs(parsedYearlyPrice - calculatedYearlyPrice) > 0.01) {
                 return res.status(400).json({
                     status: false,
                     message: "Yearly price must be 25% discounted compared to monthly price for a year.",
@@ -59,7 +70,16 @@ export const updatePlan = async (req, res, next) => {
             }
         }
 
-        const plan = await Plan.findByIdAndUpdate(id, updates, { new: true });
+        // Process features if provided
+        const featuresArray = typeof features === "string" ? features.split(",").map(f => f.trim()) : features;
+
+        // Find and update the plan
+        const plan = await Plan.findByIdAndUpdate(id, {
+            name,
+            monthlyPrice: parsedMonthlyPrice,
+            yearlyPrice: parsedYearlyPrice,
+            features: featuresArray
+        }, { new: true });
 
         if (!plan) {
             return res.status(404).json({ status: false, message: "Plan not found" });
@@ -76,6 +96,28 @@ export const updatePlan = async (req, res, next) => {
 };
 
 export const deletePlan = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const plan = await Plan.findByIdAndDelete(id);
+
+        if (!plan) {
+            return res.status(404).json({
+                status: false,
+                message: "Plan not found"
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Plan deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deactivatePlan = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -96,3 +138,4 @@ export const deletePlan = async (req, res, next) => {
         next(error);
     }
 };
+
