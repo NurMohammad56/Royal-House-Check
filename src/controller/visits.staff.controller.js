@@ -6,7 +6,7 @@ export const updateVisitNotes = async (req, res, next) => {
     const { notes } = req.body
 
     try {
-        await Visit.findByIdAndUpdate(id, { notes })
+        await Visit.findByIdAndUpdate(id, { notes }).lean()
 
         return res.status(200).json({
             status: true,

@@ -21,7 +21,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        const visit = await Visit.findOne({ client, date })
+        const visit = await Visit.findOne({ client, date }).lean()
 
         if (visit) {
             return res.status(400).json({
@@ -163,7 +163,7 @@ export const updateVisit = async (req, res, next) => {
     try {
         await updateVisitService(date, id, client, res)
 
-        const updatedVisit = await Visit.findByIdAndUpdate(id, { client, staff, address, date, type, notes, status: "confirmed" }, { new: true }).select("-createdAt -updatedAt -__v")
+        const updatedVisit = await Visit.findByIdAndUpdate(id, { client, staff, address, date, type, notes, status: "confirmed" }, { new: true }).select("-createdAt -updatedAt -__v").lean()
 
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",
@@ -208,7 +208,7 @@ export const updateVisitStaff = async (req, res, next) => {
     const { staff } = req.body
 
     try {
-        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findByIdAndUpdate(id, { staff, status: "confirmed" }, { new: true })
+        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findByIdAndUpdate(id, { staff, status: "confirmed" }, { new: true }).lean()
 
         if (!visit) {
             return res.status(404).json({

@@ -22,7 +22,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        const visit = await Visit.findOne({ client, date })
+        const visit = await Visit.findOne({ client, date }).lean()
 
         if (visit) {
             return res.status(400).json({
@@ -99,7 +99,7 @@ export const getVisitById = async (req, res, next) => {
 
     try {
 
-        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("-createdAt -updatedAt -__v")
+        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("-createdAt -updatedAt -__v").lean()
 
         if (!visit) {
             return res.status(404).json({
@@ -127,7 +127,8 @@ export const getNextVisit = async (req, res, next) => {
         const visit =
             (await Visit.findOne({ client, date: { $gte: new Date() } })
                 .sort({ date: 1 })
-                .select("-createdAt -updatedAt -__v"))
+                .select("-createdAt -updatedAt -__v")
+                .lean())
 
         if (!visit) {
             return res.status(404).json({
@@ -156,7 +157,7 @@ export const updateVisit = async (req, res, next) => {
     try {
         await updateVisitService(date, id, client, res)
 
-        const updatedVisit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-createdAt -updatedAt -__v")
+        const updatedVisit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-createdAt -updatedAt -__v").lean()
 
         return res.status(200).json({
             status: true,

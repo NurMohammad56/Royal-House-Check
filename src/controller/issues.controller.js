@@ -1,11 +1,10 @@
 import { Visit } from "../model/visit.model.js"
 
-
 export const getAllIssues = async (req, res, next) => {
-    const { id } = req.params
+    const { visitId } = req.params
 
     try {
-        const { issues } = await Visit.findById(id).select("issues")
+        const { issues } = await Visit.findById(visitId).select("issues")
 
         if (!issues) {
             return res.status(404).json({
@@ -27,11 +26,11 @@ export const getAllIssues = async (req, res, next) => {
 }
 
 export const addIssue = async (req, res, next) => {
-    const { id } = req.params
-    const { issue, type, media, notes } = req.body
+    const { visitId } = req.params
+    const { place, issue, type, media, notes } = req.body
 
     try {
-        await Visit.findByIdAndUpdate(id, { $push: { issues: { issue, type, media, notes } } })
+        await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } })
 
         return res.status(200).json({
             status: true,
