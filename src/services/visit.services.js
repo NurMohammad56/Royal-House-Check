@@ -16,6 +16,33 @@ export const createCode = async () => {
     return code;
 }
 
+export const createVisitService = async (body, client, res) => {
+
+    const { date } = body
+
+    if (new Date(date).getTime() < new Date().getTime()) {
+        return res.status(400).json({
+            status: false,
+            message: "Visit date must be in the future"
+        })
+    }
+
+    const visit = await Visit.findOne({ client, date }).lean()
+
+    if (visit) {
+        return res.status(400).json({
+            status: false,
+            message: "A visit with the same date already exists"
+        })
+    }
+
+    const code = await createCode()
+
+    await Visit.create({ visitCode: code, ...body })
+
+    return
+}
+
 //gets a specific visit
 export const getVisits = async (client, status, res) => {
 
