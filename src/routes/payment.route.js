@@ -6,8 +6,8 @@ import { isAdmin, isClient } from "../middleware/role.middleware.js";
 const router = express.Router();
 
 // User
-router.post("/create", verifyJWT, createPayment);
-router.put("/confirm", verifyJWT, confirmPayment);
+router.post("/create", verifyJWT,isClient, createPayment);
+router.put("/confirm/:paymentId", verifyJWT,isClient, confirmPayment);
 
 
 // Admin

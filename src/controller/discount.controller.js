@@ -55,7 +55,7 @@ export const updateDiscount = async (req, res, next) => {
     }
 };
 
-export const deleteDiscount = async (req, res, next) => {
+export const deactivteDiscount = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -73,3 +73,22 @@ export const deleteDiscount = async (req, res, next) => {
         next(error);
     }
 };
+
+export const deleteDiscount = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const discount = await Discount.findByIdAndDelete(id);
+
+        if (!discount) {
+            return res.status(404).json({ status: false, message: "Discount not found" });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Discount deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+}

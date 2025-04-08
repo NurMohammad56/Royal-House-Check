@@ -17,12 +17,11 @@ const paymentSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["successful", "failed"],
+        enum: ["pending","successful", "failed"],
         default: "successful",
     },
     transactionId: {
         type: String,
-        required: true,
         unique: true,
     },
     subscriptionType: {

@@ -87,7 +87,6 @@ export const getPaymentHistory = async (req, res, next) => {
 
         const payments = await Payment.find()
             .populate("user", "fullname email")
-            .populate("plan", "name amount")
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);

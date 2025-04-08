@@ -26,7 +26,16 @@ const planSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-    },
+    }
+}, {
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            ret.monthlyPrice = `$${ret.monthlyPrice}`;
+            ret.yearlyPrice = `$${ret.yearlyPrice}`;
+            return ret;
+        }
+    }
 });
 
 export const Plan = mongoose.model("Plan", planSchema);
