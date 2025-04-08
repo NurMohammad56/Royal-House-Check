@@ -10,7 +10,7 @@ export const createCode = async () => {
     do {
         code = generateCode();
 
-        visit = await Visit.findOne({ visitCode: code });
+        visit = await Visit.findOne({ visitCode: code }).lean()
     } while (visit)
 
     return code;
@@ -19,7 +19,7 @@ export const createCode = async () => {
 //gets a specific visit
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v").sort({ date: 1 })
+    const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v").sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -38,7 +38,7 @@ export const updateVisitService = async (date, id, client, res) => {
         })
     }
 
-    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status")
+    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status").lean()
 
     //checking if the visit id is valid or not
     if (!visit) {
@@ -60,7 +60,7 @@ export const updateVisitService = async (date, id, client, res) => {
         date,
         client,
         status: { $in: ["pending", "confirmed"] }
-      }).lean();
+    }).lean();
 
     // checking if the visit date is already taken by another visit
     if (existingVisit && existingVisit._id.toString() !== id) {

@@ -45,6 +45,10 @@ const visitSchema = new Schema({
         default: ""
     },
     issues: [{
+        place: {
+            type: String,
+            trim: true
+        },
         issue: {
             type: String,
             trim: true
