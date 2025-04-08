@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { Visit } from "../model/visit.model.js"
 
 export const updateVisitStatus = async (req, res, next) => {
@@ -5,13 +6,25 @@ export const updateVisitStatus = async (req, res, next) => {
     const { status } = req.body
 
     try {
+        let visit
 
-        const visit = await Visit.findByIdAndUpdate(id, { status }, { new: true }).select("-client -staff -address -type -notes")
-
+        //client or admin can cancel the visit
         if (status === "cancelled") {
             const { cancellationReason } = req.body
-            visit.cancellationReason = cancellationReason
-            await visit.save()
+            visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findByIdAndUpdate(id, { status, cancellationReason }, { new: true }).select("-createdAt -updatedAt -__v")
+        }
+
+        //admin or staff can add notes for a completed visit
+        if (status === "completed") {
+            const { notes } = req.body
+            visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findByIdAndUpdate(id, { status, notes }, { new: true }).select("-createdAt -updatedAt -__v")
+        }
+
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            })
         }
 
         return res.status(200).json({

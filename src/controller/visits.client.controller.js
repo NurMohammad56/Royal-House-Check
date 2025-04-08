@@ -120,6 +120,34 @@ export const getVisitById = async (req, res, next) => {
     }
 }
 
+export const getNextVisit = async (req, res, next) => {
+    const client = req.user._id
+
+    try {
+        const visit =
+            (await Visit.findOne({ client, date: { $gte: new Date() } })
+                .sort({ date: 1 })
+                .select("-createdAt -updatedAt -__v"))
+
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "No upcoming visits found"
+            })
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Next visit fetched successfully",
+            data: visit
+        })
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
     const { address, date, type } = req.body
