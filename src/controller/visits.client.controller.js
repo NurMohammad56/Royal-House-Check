@@ -126,7 +126,9 @@ export const updateVisit = async (req, res, next) => {
     const client = req.user._id
 
     try {
-        const updatedVisit = await updateVisitService({ address, date, type }, id, client, res)
+        await updateVisitService(date, id, client, res)
+
+        const updatedVisit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-createdAt -updatedAt -__v")
 
         return res.status(200).json({
             status: true,
