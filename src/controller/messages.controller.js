@@ -1,14 +1,11 @@
 import { Message } from "../model/message.model.js";
-import { Notification } from "../model/notfication.model.js";
 import { io } from "../utils/socket.utils.js";
-
 
 export const sendMessage = async (req, res, next) => {
     try {
         const { receiverId, message } = req.body;
         const senderId = req.user.id;
 
-        // Check if conversation exists between client and staff
         let chat = await Message.findOne({
             $or: [
                 { client: senderId, staff: receiverId },
@@ -24,32 +21,19 @@ export const sendMessage = async (req, res, next) => {
             });
         }
 
-        // Push new message into the messages array
         const newMessage = {
             sender: senderId,
             receiver: receiverId,
-            message
+            message,
+            createdAt: new Date()
         };
 
         chat.messages.push(newMessage);
         await chat.save();
 
-        // Emit real-time message
-        io.to(receiverId).emit("newMessage", {
-            sender: senderId,
-            message,
-            createdAt: newMessage.createdAt
-        });
+        // Emit real-time message to the receiver's room
+        io.to(receiverId).emit("newMessage", newMessage);
 
-        // Create notification for the receiver
-        await Notification.create({
-            userId: receiverId,
-            notifications: [{
-                type: "new message",
-                message: `New message from ${senderId}`,
-                isRead: false,
-            }]
-        });
 
         return res.status(201).json({
             status: true,
@@ -69,7 +53,7 @@ export const getMessages = async (req, res, next) => {
                 { client: req.user.id, staff: userId },
                 { client: userId, staff: req.user.id }
             ]
-        }).populate("messages.sender messages.receiver", "name email");
+        });
 
         if (!chat) {
             return res.status(200).json({

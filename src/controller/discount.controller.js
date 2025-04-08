@@ -15,19 +15,31 @@ export const getAllDiscounts = async (_, res, next) => {
 
 export const addDiscount = async (req, res, next) => {
     try {
-        const { name, percentage, fromDate, toDate } = req.body;
+        const { planID, voucherCode, description, discountPercentage, startDate, endDate } = req.body;
 
-        const discount = await Discount.create({
-            name,
-            percentage,
-            fromDate,
-            toDate,
+        if (!planID || !voucherCode || !description || !discountPercentage || !startDate || !endDate) {
+            return res.status(400).json({
+              status: false,
+              message: "Missing required fields",
+            });
+          }
+
+        // Create a new discount plan
+        const discountPlan = new Discount({
+            planID,
+            voucherCode,
+            description,
+            discountPercentage,
+            startDate,
+            endDate,
         });
 
-        return res.status(201).json({
-            status: true,
-            message: "Discount added successfully",
-            data: discount
+        await discountPlan.save();
+
+        res.status(201).json({
+            success: true,
+            message: "Discount plan created successfully",
+            discountPlan,
         });
     } catch (error) {
         next(error);
@@ -92,3 +104,33 @@ export const deleteDiscount = async (req, res, next) => {
         next(error);
     }
 }
+
+export const applyDiscount = async (req, res, next) => {
+    try {
+        const { discountCode } = req.body; 
+
+        const discountPlan = await Discount.findOne({ discountCode: discountCode });
+
+        // If no discount plan is found or it's inactive
+        if (!discountPlan || !discountPlan.isActive) {
+            return res.status(400).json({ success: false, message: "Invalid or inactive discount plan" });
+        }
+
+        // Check if the discount plan is still valid based on the date range
+        const currentDate = new Date();
+        if (currentDate < new Date(discountPlan.startDate) || currentDate > new Date(discountPlan.endDate)) {
+            return res.status(400).json({ success: false, message: "Discount plan expired" });
+        }
+
+        // Apply the discount to the plan's price
+        const discountedAmount = discountPlan.price - (discountPlan.price * discountPlan.discountPercentage / 100);
+
+        res.status(200).json({
+            status: true,
+            message: "Discount applied successfully",
+            data: discountedAmount, 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
