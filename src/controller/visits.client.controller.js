@@ -1,11 +1,11 @@
 import mongoose from "mongoose"
 import { Visit } from "../model/visit.model.js"
-import { createCode, getVisits } from "../services/visit.services.js"
+import { createCode, getVisits, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
     const { address, date, type } = req.body
-    const client = req.user.id
+    const client = req.user._id
 
     try {
         if (!address || !date || !type) {
@@ -31,7 +31,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        const code = await createCode(next)
+        const code = await createCode()
 
         await Visit.create({ visitCode: code, client, address, date, type })
 
@@ -48,9 +48,9 @@ export const createVisit = async (req, res, next) => {
 
 export const getConfirmedVisits = async (req, res, next) => {
 
-    const client = req.user.id
+    const client = req.user._id
     try {
-        await getVisits(client, "confirmed", res, next)
+        await getVisits(client, "confirmed", res)
     }
 
     catch (error) {
@@ -60,9 +60,9 @@ export const getConfirmedVisits = async (req, res, next) => {
 
 export const getPendingVisits = async (req, res, next) => {
 
-    const client = req.user.id
+    const client = req.user._id
     try {
-        await getVisits(client, "pending", res, next)
+        await getVisits(client, "pending", res)
     }
 
     catch (error) {
@@ -72,9 +72,9 @@ export const getPendingVisits = async (req, res, next) => {
 
 export const getCompletedVisits = async (req, res, next) => {
 
-    const client = req.user.id
+    const client = req.user._id
     try {
-        await getVisits(client, "completed", res, next)
+        await getVisits(client, "completed", res)
     }
 
     catch (error) {
@@ -84,9 +84,9 @@ export const getCompletedVisits = async (req, res, next) => {
 
 export const getCancelledVisits = async (req, res, next) => {
 
-    const client = req.user.id
+    const client = req.user._id
     try {
-        await getVisits(client, "cancelled", res, next)
+        await getVisits(client, "cancelled", res)
     }
 
     catch (error) {
@@ -123,47 +123,10 @@ export const getVisitById = async (req, res, next) => {
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
     const { address, date, type } = req.body
-    const client = req.user.id
+    const client = req.user._id
 
     try {
-
-        //checking if the provided date is in the future
-        if (new Date(date).getTime() < new Date().getTime()) {
-            return res.status(400).json({
-                status: false,
-                message: "Visit date must be in the future"
-            })
-        }
-
-        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status")
-
-        //checking if the visit id is valid or not
-        if (!visit) {
-            return res.status(404).json({
-                status: false,
-                message: "Visit not found"
-            });
-        }
-
-        //checking if the visit is completed or cancelled
-        if (visit.status === "completed" || visit.status === "cancelled") {
-            return res.status(403).json({
-                status: false,
-                message: "You cannot update the visit which is completed or cancelled"
-            })
-        }
-
-        const existingVisit = await Visit.findOne({ date, client, $or: [{ status: "pending" }, { status: "confirmed" }] })
-
-        // checking if the visit date is already taken by another visit
-        if (existingVisit && existingVisit._id.toString() !== id) {
-            return res.status(400).json({
-                status: false,
-                message: "You already taken a visit in this date"
-            });
-        }
-
-        const updatedVisit = await Visit.findByIdAndUpdate(id, { address, date, type }, { new: true }).select("-createdAt -updatedAt -__v")
+        const updatedVisit = await updateVisitService({ address, date, type }, id, client, res)
 
         return res.status(200).json({
             status: true,

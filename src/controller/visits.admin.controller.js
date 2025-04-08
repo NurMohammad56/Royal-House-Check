@@ -1,6 +1,7 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createCode, getVisits } from "../services/visit.services.js";
+import { createCode, getVisits, updateVisitService } from "../services/visit.services.js";
+import mongoose from "mongoose";
 
 export const createVisit = async (req, res, next) => {
     const { client, staff, type, address, date } = req.body
@@ -29,7 +30,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        const code = await createCode(next)
+        const code = await createCode()
 
         await Visit.create({ visitCode: code, client, staff, address, date, type });
 
@@ -109,7 +110,7 @@ export const getConfirmedVisits = async (req, res, next) => {
     const { client } = req.body
 
     try {
-        await getVisits(client, "confirmed", res, next)
+        await getVisits(client, "confirmed", res)
     }
 
     catch (error) {
@@ -122,7 +123,7 @@ export const getPendingVisits = async (req, res, next) => {
     const { client } = req.body
 
     try {
-        await getVisits(client, "pending", res, next)
+        await getVisits(client, "pending", res)
     }
 
     catch (error) {
@@ -135,7 +136,7 @@ export const getCompletedVisits = async (req, res, next) => {
     const { client } = req.body
 
     try {
-        await getVisits(client, "completed", res, next)
+        await getVisits(client, "completed", res)
     }
 
     catch (error) {
@@ -148,7 +149,7 @@ export const getCancelledVisits = async (req, res, next) => {
     const { client } = req.body
 
     try {
-        await getVisits(client, "cancelled", res, next)
+        await getVisits(client, "cancelled", res)
     }
     catch (error) {
         next(error)
@@ -157,20 +158,12 @@ export const getCancelledVisits = async (req, res, next) => {
 
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
-    const { staff, address, date, type, notes } = req.body
+    const { client, staff, address, date, type, notes } = req.body
 
     try {
+        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes }, id, client, res, next)
 
-        if (type === "completed" || type === "cancelled") {
-            return res.status(400).json({
-                status: false,
-                message: "You cannot update the visit which is completed or cancelled"
-            })
-        }
-
-        const visit = await Visit.findByIdAndUpdate(id, { staff, address, date, type, notes }, { new: true }).select("-client -status -notes")
-
-        const formattedDate = new Date(visit.date).toLocaleString("en-US", {
+        const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",
             year: "numeric",
             month: "short",
@@ -182,24 +175,24 @@ export const updateVisit = async (req, res, next) => {
 
         // Notify client
         await Notification.create({
-            userId: visit.client,
+            userId: updatedVisit.client,
             type: "visit update",
-            message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+            message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
         });
 
         // Notify staff
-        if (visit.staff) {
+        if (updatedVisit.staff) {
             await Notification.create({
-                userId: visit.staff,
+                userId: updatedVisit.staff,
                 type: "visit update",
-                message: `Visit log updated for ${visit.visitCode} (${formattedDate})`,
+                message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
             });
         }
 
         return res.status(200).json({
             status: true,
             message: "Visit updated successfully",
-            data: visit
+            data: updatedVisit
         })
     }
 
@@ -213,7 +206,14 @@ export const updateVisitStaff = async (req, res, next) => {
     const { staff } = req.body
 
     try {
-        await Visit.findByIdAndUpdate(id, { staff, status: "confirmed" })
+        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findByIdAndUpdate(id, { staff, status: "confirmed" }, { new: true })
+
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            });
+        }
 
         return res.status(200).json({
             status: true,
