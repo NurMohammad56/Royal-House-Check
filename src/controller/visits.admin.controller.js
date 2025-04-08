@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createCode, getVisits, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getVisits, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 export const createVisit = async (req, res, next) => {
@@ -14,25 +14,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        if (new Date(date).getTime() < new Date().getTime()) {
-            return res.status(400).json({
-                status: false,
-                message: "Visit date must be in the future"
-            })
-        }
-
-        const visit = await Visit.findOne({ client, date }).lean()
-
-        if (visit) {
-            return res.status(400).json({
-                status: false,
-                message: "A visit with the same date already exists"
-            })
-        }
-
-        const code = await createCode()
-
-        await Visit.create({ visitCode: code, client, staff, address, date, type });
+        await createVisitService({ client, staff, type, address, date }, client, res)
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
             weekday: "short",
