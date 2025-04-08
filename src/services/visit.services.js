@@ -28,9 +28,7 @@ export const getVisits = async (client, status, res) => {
     })
 }
 
-export const updateVisitService = async (body, id, client, res) => {
-
-    const { date } = body
+export const updateVisitService = async (date, id, client, res) => {
 
     //checking if the provided date is in the future
     if (new Date(date).getTime() < new Date().getTime()) {
@@ -58,7 +56,11 @@ export const updateVisitService = async (body, id, client, res) => {
         })
     }
 
-    const existingVisit = await Visit.findOne({ date, client, $or: [{ status: "pending" }, { status: "confirmed" }] })
+    const existingVisit = await Visit.findOne({
+        date,
+        client,
+        status: { $in: ["pending", "confirmed"] }
+      }).lean();
 
     // checking if the visit date is already taken by another visit
     if (existingVisit && existingVisit._id.toString() !== id) {
@@ -68,7 +70,5 @@ export const updateVisitService = async (body, id, client, res) => {
         });
     }
 
-    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true }).select("-createdAt -updatedAt -__v")
-
-    return updatedVisit
+    return
 }
