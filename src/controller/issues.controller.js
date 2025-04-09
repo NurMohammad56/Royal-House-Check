@@ -1,4 +1,5 @@
 import { Visit } from "../model/visit.model.js"
+import { cloudinaryUpload } from "../utils/cloudinary.utils.js";
 
 export const getAllIssues = async (req, res, next) => {
     const { visitId } = req.params
@@ -27,15 +28,24 @@ export const getAllIssues = async (req, res, next) => {
 
 export const addIssue = async (req, res, next) => {
     const { visitId } = req.params
-    const { place, issue, type, media, notes } = req.body
+    const { place, issue, type, notes } = req.body
 
     try {
-        await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } })
+        console.log("images", req.files?.image[0].path)
+        console.log("videos", req.files?.video[0].path)
+        // const cloudinaryUpload = await uploadOnCloudinary(req.files.buffer, {
+        //     resource_type: "auto",
+        // });
+        // const cloudinaryUpload = await uploadOnCloudinary(req.files.buffer, {
+        //     resource_type: "auto",
+        // });
 
-        return res.status(200).json({
-            status: true,
-            message: "Issue added successfully"
-        })
+        // await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } })
+
+        // return res.status(200).json({
+        //     status: true,
+        //     message: "Issue added successfully"
+        // })
     }
 
     catch (error) {
