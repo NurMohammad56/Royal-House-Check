@@ -4,6 +4,7 @@ import visitRouter from "./visits.route.js"
 import visitClientRouter from "./visits.client.route.js"
 import visitAdminRouter from "./visits.admin.route.js"
 import visitStaffRouter from "./visits.staff.route.js"
+import issuesRouter from "./issues.route.js"
 import notificationRouter from "./notification.route.js"
 import planRouter from "./plan.route.js"
 import discountRouter from "./discount.route.js"
@@ -18,6 +19,7 @@ export const rootRouter = (app) => {
     app.use('/api/v1/visits/client', visitClientRouter)
     app.use('/api/v1/visits/admin', visitAdminRouter)
     app.use('/api/v1/visits/staff', visitStaffRouter)
+    app.use('/api/v1/visits/issues', issuesRouter)
     app.use('/api/v1/notifications', notificationRouter)
     app.use('/api/v1/plans', planRouter)
     app.use('/api/v1/discounts', discountRouter)

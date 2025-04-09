@@ -1,10 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import {
-    CLOUDINARY_API_KEY,
-    CLOUDINARY_CLOUD_NAME,
-    CLOUDINARY_API_SECRET,
-} from "../config/index.js";
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_SECRET,
+} from "../config/config.js";
 
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
   throw new Error("Cloudinary configuration error: Missing required environment variables.");
@@ -30,7 +30,9 @@ const cloudinaryUpload = async (filePath, public_id, folder, resourceType = "ima
 
     fs.unlinkSync(filePath);
     return uploadResult;
-  } catch (error) {
+  }
+
+  catch (error) {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

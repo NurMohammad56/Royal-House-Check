@@ -14,7 +14,7 @@ export const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET
 
 export const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY
 
-export const CLOUDINARY_CLOUDE_NAME = process.env.CLOUDINARY_CLOUDE_NAME;
+export const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 
 export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 
