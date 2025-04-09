@@ -4,7 +4,6 @@ import { notFoundHandler } from "./src/middleware/notFoundHandler.middleware.js"
 import errorHandler from "./src/middleware/errorHandler.middleware.js"
 import {rootRouter} from './src/routes/root.route.js'
 import connectDatabase from './src/config/connectDatabase.js'
-import { deactivateExpiredSubscriptions } from "./src/services/payment.service.js"
 
 const app = express()
 
@@ -33,5 +32,3 @@ async function startServer() {
 }
 
 startServer()
-
-deactivateExpiredSubscriptions();

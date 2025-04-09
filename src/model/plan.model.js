@@ -10,10 +10,14 @@ const planSchema = new Schema({
     monthlyPrice: {
         type: Number,
         required: true,
+        get: price => `$${price.toFixed(2)}`, 
+        set: price => parseFloat(price.replace(/[^0-9.]/g, '')) 
     },
     yearlyPrice: {
         type: Number,
         required: true,
+        get: price => `$${price.toFixed(2)}`,
+        set: price => parseFloat(price.replace(/[^0-9.]/g, ''))
     },
     features: {
         type: [String],
@@ -29,12 +33,10 @@ const planSchema = new Schema({
     }
 }, {
     toJSON: {
-        virtuals: true,
-        transform: (doc, ret) => {
-            ret.monthlyPrice = `$${ret.monthlyPrice}`;
-            ret.yearlyPrice = `$${ret.yearlyPrice}`;
-            return ret;
-        }
+        getters: true 
+    },
+    toObject: {
+        getters: true 
     }
 });
 

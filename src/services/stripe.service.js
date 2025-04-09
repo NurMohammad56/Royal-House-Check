@@ -2,16 +2,22 @@ import Stripe from "stripe";
 import { STRIPE_SECRET_KEY } from "../config/config.js";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-export const createStripePaymentIntent = async (amount, currency = "usd") => {
+
+export const createStripePaymentIntent = async (amount, currency, metadata) => {
     try {
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(amount * 100), // Convert to cents
             currency,
+            metadata,
+            automatic_payment_methods: {
+                enabled: true,
+            },
         });
-        return paymentIntent.client_secret; // Return client secret for frontend
+
+        return paymentIntent.client_secret;
     } catch (error) {
-        console.error("Stripe error:", error);
-        throw error;
+        console.error("Stripe payment error:", error);
+        throw new Error("Payment processing failed");
     }
 };
 export const verifyStripeWebhook = (payload, sig, endpointSecret) => {

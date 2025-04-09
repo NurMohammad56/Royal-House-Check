@@ -9,7 +9,6 @@ const discountSchema = new Schema({
     description: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
     },
     voucherCode: {
@@ -21,6 +20,8 @@ const discountSchema = new Schema({
     discountPercentage: {
         type: Number,
         required: true,
+        min: 0,
+        max: 100
     },
     startDate: {
         type: Date,
@@ -29,6 +30,12 @@ const discountSchema = new Schema({
     endDate: {
         type: Date,
         required: true,
+        validate: {
+            validator: function (endDate) {
+                return endDate > this.startDate;
+            },
+            message: "End date must be after start date"
+        }
     },
     isActive: {
         type: Boolean,
