@@ -3,6 +3,7 @@ import { Notification } from "../model/notfication.model.js";
 import { createVisitService, getVisits, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
+//admin creates a visit for a client
 export const createVisit = async (req, res, next) => {
     const { client, staff, type, address, date } = req.body
 
@@ -53,6 +54,7 @@ export const createVisit = async (req, res, next) => {
     }
 }
 
+//admin gets all visits count for a client
 export const getAllVisitsCount = async (_, res, next) => {
 
     try {
@@ -70,6 +72,7 @@ export const getAllVisitsCount = async (_, res, next) => {
     }
 }
 
+//admin gets all confirmed visits count for a client
 export const getPendingVisitsCount = async (_, res, next) => {
 
     try {
@@ -87,6 +90,7 @@ export const getPendingVisitsCount = async (_, res, next) => {
     }
 }
 
+//admin gets all confirmed visits for a client
 export const getConfirmedVisits = async (req, res, next) => {
 
     const { client } = req.body
@@ -100,6 +104,7 @@ export const getConfirmedVisits = async (req, res, next) => {
     }
 }
 
+//admin gets all pending visits for a client
 export const getPendingVisits = async (req, res, next) => {
 
     const { client } = req.body
@@ -113,6 +118,7 @@ export const getPendingVisits = async (req, res, next) => {
     }
 }
 
+//admin gets all completed visits for a client
 export const getCompletedVisits = async (req, res, next) => {
 
     const { client } = req.body
@@ -126,6 +132,7 @@ export const getCompletedVisits = async (req, res, next) => {
     }
 }
 
+//admin gets all cancelled visits for a client
 export const getCancelledVisits = async (req, res, next) => {
 
     const { client } = req.body
@@ -138,14 +145,79 @@ export const getCancelledVisits = async (req, res, next) => {
     }
 }
 
+//admin gets all past visits for a client
+export const getPastVisits = async (req, res, next) => {
+    const { page = 1, limit = 10 } = req.query;
+    const client = req.user._id
+
+    try {
+        const visits = await Visit.find({
+            client,
+            date: { $lt: new Date() }
+        })
+            .sort({ date: -1 }) // most recent first
+            .skip((page - 1) * limit)
+            .limit(Number(limit));
+
+        const total = await Visit.countDocuments({
+            client,
+            date: { $lt: new Date() }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Past visits fetched successfully",
+            data: visits,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page)
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all upcoming visits for a client
+export const getUpcomingVisits = async (req, res, next) => {
+    const { page = 1, limit = 10 } = req.query;
+    const client = req.user._id
+
+    try {
+        const visits = await Visit.find({
+            client,
+            date: { $gte: new Date() }
+        })
+            .sort({ date: 1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit));
+
+        const total = await Visit.countDocuments({
+            client,
+            date: { $gte: new Date() }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Upcoming visits fetched successfully",
+            data: visits,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page)
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin updates a specific visit for a client
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
     const { client, staff, address, date, type, notes } = req.body
 
     try {
-        await updateVisitService(date, id, client, res)
-
-        const updatedVisit = await Visit.findByIdAndUpdate(id, { client, staff, address, date, type, notes, status: "confirmed" }, { new: true }).select("-createdAt -updatedAt -__v").lean()
+        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed" }, id, client, res)
 
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",
