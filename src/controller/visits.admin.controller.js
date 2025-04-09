@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getVisits, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 //admin creates a visit for a client
@@ -93,7 +93,7 @@ export const getPendingVisitsCount = async (_, res, next) => {
 //admin gets all confirmed visits for a client
 export const getConfirmedVisits = async (req, res, next) => {
 
-    const { client } = req.body
+    const { client } = req.params
 
     try {
         await getVisits(client, "confirmed", res)
@@ -107,7 +107,7 @@ export const getConfirmedVisits = async (req, res, next) => {
 //admin gets all pending visits for a client
 export const getPendingVisits = async (req, res, next) => {
 
-    const { client } = req.body
+    const { client } = req.params
 
     try {
         await getVisits(client, "pending", res)
@@ -121,7 +121,7 @@ export const getPendingVisits = async (req, res, next) => {
 //admin gets all completed visits for a client
 export const getCompletedVisits = async (req, res, next) => {
 
-    const { client } = req.body
+    const { client } = req.params
 
     try {
         await getVisits(client, "completed", res)
@@ -135,7 +135,7 @@ export const getCompletedVisits = async (req, res, next) => {
 //admin gets all cancelled visits for a client
 export const getCancelledVisits = async (req, res, next) => {
 
-    const { client } = req.body
+    const { client } = req.params
 
     try {
         await getVisits(client, "cancelled", res)
@@ -148,29 +148,10 @@ export const getCancelledVisits = async (req, res, next) => {
 //admin gets all past visits for a client
 export const getPastVisits = async (req, res, next) => {
     const { page = 1, limit = 10 } = req.query;
-    const client = req.user._id
+    const { client } = req.params
 
     try {
-        const visits = await Visit.find({
-            client,
-            date: { $lt: new Date() }
-        })
-            .sort({ date: -1 }) // most recent first
-            .skip((page - 1) * limit)
-            .limit(Number(limit));
-
-        const total = await Visit.countDocuments({
-            client,
-            date: { $lt: new Date() }
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: "Past visits fetched successfully",
-            data: visits,
-            totalPages: Math.ceil(total / limit),
-            currentPage: Number(page)
-        });
+        await getPastVisitsService(page, limit, client, res)
     }
 
     catch (error) {
@@ -181,29 +162,10 @@ export const getPastVisits = async (req, res, next) => {
 //admin gets all upcoming visits for a client
 export const getUpcomingVisits = async (req, res, next) => {
     const { page = 1, limit = 10 } = req.query;
-    const client = req.user._id
+    const { client } = req.params
 
     try {
-        const visits = await Visit.find({
-            client,
-            date: { $gte: new Date() }
-        })
-            .sort({ date: 1 })
-            .skip((page - 1) * limit)
-            .limit(Number(limit));
-
-        const total = await Visit.countDocuments({
-            client,
-            date: { $gte: new Date() }
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: "Upcoming visits fetched successfully",
-            data: visits,
-            totalPages: Math.ceil(total / limit),
-            currentPage: Number(page)
-        });
+        await getUpcomingVisitsService(page, limit, client, res)
     }
 
     catch (error) {

@@ -59,6 +59,54 @@ export const getVisits = async (client, status, res) => {
     })
 }
 
+export const getPastVisitsService = async (page, limit, client, res) => {
+
+    const visits = await Visit.find({
+        client,
+        date: { $lt: new Date() }
+    })
+        .sort({ date: -1 }) // most recent first
+        .skip((page - 1) * limit)
+        .limit(Number(limit));
+
+    const total = await Visit.countDocuments({
+        client,
+        date: { $lt: new Date() }
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "Past visits fetched successfully",
+        data: visits,
+        totalPages: Math.ceil(total / limit),
+        currentPage: Number(page)
+    });
+}
+
+export const getUpcomingVisitsService = async (page, limit, client, res) => {
+
+    const visits = await Visit.find({
+        client,
+        date: { $gte: new Date() }
+    })
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit));
+
+    const total = await Visit.countDocuments({
+        client,
+        date: { $gte: new Date() }
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "Upcoming visits fetched successfully",
+        data: visits,
+        totalPages: Math.ceil(total / limit),
+        currentPage: Number(page)
+    });
+}
+
 export const updateVisitService = async (body, id, client, res) => {
 
     const { date } = body
