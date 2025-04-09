@@ -2,6 +2,8 @@ import { Payment } from "../model/payment.model.js";
 import { Plan } from "../model/plan.model.js";
 import { Discount } from "../model/discount.model.js";
 import { paymentService } from "../services/payment.service.js";
+import { User } from "../model/user.model.js";
+import { Notification } from "../model/notfication.model.js";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -14,30 +16,30 @@ export const createPayment = async (req, res, next) => {
         // Validate payment method
         const supportedMethods = ["stripe"];
         if (!supportedMethods.includes(paymentMethod)) {
-            return res.status(400).json({ 
-                status: false, 
-                message: "Unsupported payment method" 
+            return res.status(400).json({
+                status: false,
+                message: "Unsupported payment method"
             });
         }
 
         // Validate plan exists
         const plan = await Plan.findById(planID);
         if (!plan) {
-            return res.status(404).json({ 
-                status: false, 
-                message: "Plan not found" 
+            return res.status(404).json({
+                status: false,
+                message: "Plan not found"
             });
         }
 
         // Get base amount
-        const baseAmount = subscriptionType === "monthly" 
+        const baseAmount = subscriptionType === "monthly"
             ? parseFloat(plan.monthlyPrice.toString().replace(/[^0-9.]/g, ''))
             : parseFloat(plan.yearlyPrice.toString().replace(/[^0-9.]/g, ''));
 
         if (isNaN(baseAmount)) {
-            return res.status(400).json({ 
-                status: false, 
-                message: "Invalid plan pricing" 
+            return res.status(400).json({
+                status: false,
+                message: "Invalid plan pricing"
             });
         }
 
@@ -57,9 +59,9 @@ export const createPayment = async (req, res, next) => {
             if (!discount) {
                 // Detailed error information for debugging
                 const exists = await Discount.exists({ voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') } });
-                const activeForPlan = await Discount.exists({ 
+                const activeForPlan = await Discount.exists({
                     voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') },
-                    planID 
+                    planID
                 });
                 const activeNow = await Discount.exists({
                     voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') },
@@ -103,12 +105,12 @@ export const createPayment = async (req, res, next) => {
             isActive: false,
             startDate: new Date(),
             endDate: new Date(),
-            ...(discountInfo && { 
+            ...(discountInfo && {
                 discount: {
                     voucherCode: discountInfo.voucherCode,
                     discountPercentage: discountInfo.discountPercentage,
                     amountSaved: discountInfo.discountAmount
-                } 
+                }
             }),
         });
 
@@ -160,6 +162,7 @@ export const confirmPayment = async (req, res, next) => {
         const { paymentId } = req.params;
         const { success, transactionId } = req.body;
 
+        // Validate success status
         if (typeof success !== 'boolean') {
             return res.status(400).json({
                 status: false,
@@ -167,8 +170,11 @@ export const confirmPayment = async (req, res, next) => {
             });
         }
 
-        // Find payment by our database ID
-        const payment = await Payment.findById(paymentId);
+        // Find payment with user and plan details
+        const payment = await Payment.findById(paymentId)
+            .populate('user', 'fullname email')
+            .populate('plan', 'name');
+            
         if (!payment) {
             return res.status(404).json({ 
                 status: false, 
@@ -186,6 +192,53 @@ export const confirmPayment = async (req, res, next) => {
             } else if (payment.subscriptionType === 'yearly') {
                 endDate.setFullYear(endDate.getFullYear() + 1);
             }
+
+            // Format dates for notifications
+            const formattedEndDate = endDate.toLocaleString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
+            });
+
+            // Get all admin users
+            const adminUsers = await User.find({ role: "admin" }).select("_id");
+
+            // Create notifications array
+            const notifications = [];
+            
+            // Notification for purchasing user
+            notifications.push({
+                userId: payment.user._id,
+                type: "subscription",
+                message: `Your ${payment.subscriptionType} subscription (${payment.plan.name}) for $${payment.amount} has been activated! Valid until ${formattedEndDate}`,
+                relatedEntity: payment._id,
+                relatedEntityModel: "Payment"
+            });
+
+            // Notifications for all admins
+            adminUsers.forEach(admin => {
+                notifications.push({
+                    userId: admin._id,
+                    type: "subscription",
+                    message: `New ${payment.subscriptionType} subscription (${payment.plan.name}) purchased by ${payment.user.fullname} (${payment.user.email}) for $${payment.amount}`,
+                    relatedEntity: payment._id,
+                    relatedEntityModel: "Payment",
+                    metadata: {
+                        discountApplied: payment.discount ? true : false,
+                        originalAmount: payment.originalAmount,
+                        finalAmount: payment.amount
+                    }
+                });
+            });
+
+            // Save all notifications
+            if (notifications.length > 0) {
+                await Notification.insertMany(notifications);
+            }
         }
 
         // Update payment status
@@ -193,10 +246,10 @@ export const confirmPayment = async (req, res, next) => {
             paymentId,
             {
                 status: success ? 'completed' : 'failed',
-                transactionId,
+                transactionId: transactionId || null,
                 isActive: success,
-                startDate,
-                endDate,
+                startDate: success ? startDate : undefined,
+                endDate: success ? endDate : undefined,
             },
             { new: true }
         );

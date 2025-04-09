@@ -8,7 +8,7 @@ const notificationSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ["visit schedule", "new message", "visit update", "plan"]
+        enum: ["visit schedule", "new message", "visit update", "plan", "subscription", "payment", "visit", "system"]
     },
     message: {
         type: String,
@@ -18,6 +18,14 @@ const notificationSchema = new Schema({
         type: Boolean,
         default: false
     },
+    relatedEntity: {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: "relatedEntityModel"
+      },
+      relatedEntityModel: {
+        type: String,
+        enum: ["Payment", "User", "Plan"]
+      },
     createdAt: {
         type: Date,
         default: Date.now()
