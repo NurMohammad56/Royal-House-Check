@@ -143,9 +143,7 @@ export const updateVisit = async (req, res, next) => {
     const { client, staff, address, date, type, notes } = req.body
 
     try {
-        await updateVisitService(date, id, client, res)
-
-        const updatedVisit = await Visit.findByIdAndUpdate(id, { client, staff, address, date, type, notes, status: "confirmed" }, { new: true }).select("-createdAt -updatedAt -__v").lean()
+        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed" }, id, client, res)
 
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",

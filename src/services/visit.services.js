@@ -20,6 +20,10 @@ export const createVisitService = async (body, client, res) => {
 
     const { date } = body
 
+    if (!body.client) {
+        body.client = client
+    }
+
     if (new Date(date).getTime() < new Date().getTime()) {
         return res.status(400).json({
             status: false,
@@ -55,7 +59,9 @@ export const getVisits = async (client, status, res) => {
     })
 }
 
-export const updateVisitService = async (date, id, client, res) => {
+export const updateVisitService = async (body, id, client, res) => {
+
+    const { date } = body
 
     //checking if the provided date is in the future
     if (new Date(date).getTime() < new Date().getTime()) {
@@ -87,7 +93,7 @@ export const updateVisitService = async (date, id, client, res) => {
         date,
         client,
         status: { $in: ["pending", "confirmed"] }
-    }).lean();
+    }).lean()
 
     // checking if the visit date is already taken by another visit
     if (existingVisit && existingVisit._id.toString() !== id) {
@@ -97,5 +103,7 @@ export const updateVisitService = async (date, id, client, res) => {
         });
     }
 
-    return
+    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true }).select("-createdAt -updatedAt -__v").lean()
+
+    return updatedVisit
 }
