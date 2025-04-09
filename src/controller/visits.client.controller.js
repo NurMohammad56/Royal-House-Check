@@ -76,6 +76,70 @@ export const getCancelledVisits = async (req, res, next) => {
     }
 }
 
+export const getPastVisits = async (req, res, next) => {
+    const { page = 1, limit = 10 } = req.query;
+    const client = req.user._id
+
+    try {
+        const visits = await Visit.find({
+            client,
+            date: { $lt: new Date() }
+        })
+            .sort({ date: -1 }) // most recent first
+            .skip((page - 1) * limit)
+            .limit(Number(limit));
+
+        const total = await Visit.countDocuments({
+            client,
+            date: { $lt: new Date() }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Past visits fetched successfully",
+            data: visits,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page)
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getUpcomingVisits = async (req, res, next) => {
+    const { page = 1, limit = 10 } = req.query;
+    const client = req.user._id
+
+    try {
+        const visits = await Visit.find({
+            client,
+            date: { $gte: new Date() }
+        })
+            .sort({ date: 1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit));
+
+        const total = await Visit.countDocuments({
+            client,
+            date: { $gte: new Date() }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Upcoming visits fetched successfully",
+            data: visits,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page)
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
 export const getVisitById = async (req, res, next) => {
     const { id } = req.params
 
