@@ -55,10 +55,12 @@ export const createVisit = async (req, res, next) => {
 }
 
 //admin gets all visits count for a client
-export const getAllVisitsCount = async (_, res, next) => {
+export const getAllVisitsCount = async (req, res, next) => {
+
+    const { client } = req.params
 
     try {
-        const totalVisits = await Visit.countDocuments();
+        const totalVisits = await Visit.countDocuments({ client });
 
         return res.status(200).json({
             status: true,
@@ -72,15 +74,37 @@ export const getAllVisitsCount = async (_, res, next) => {
     }
 }
 
-//admin gets all confirmed visits count for a client
-export const getPendingVisitsCount = async (_, res, next) => {
+//admin gets all pending visits count for a client
+export const getPendingVisitsCount = async (req, res, next) => {
+
+    const { client } = req.params
 
     try {
-        const totalVisits = await Visit.countDocuments({ status: "pending" })
+        const totalVisits = await Visit.countDocuments({ client, status: "pending" })
 
         return res.status(200).json({
             status: true,
             message: "Total pending visits count fetched successfully",
+            total: totalVisits
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all confirmed visits count for a client
+export const getConfirmedVisitsCount = async (req, res, next) => {
+
+    const { client } = req.params
+
+    try {
+        const totalVisits = await Visit.countDocuments({ client, status: "confirmed" })
+
+        return res.status(200).json({
+            status: true,
+            message: "Total confirmed visits count fetched successfully",
             total: totalVisits
         });
     }
