@@ -102,32 +102,6 @@ export const getUpcomingVisits = async (req, res, next) => {
     }
 }
 
-export const getVisitById = async (req, res, next) => {
-    const { id } = req.params
-
-    try {
-
-        const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("-createdAt -updatedAt -__v").lean()
-
-        if (!visit) {
-            return res.status(404).json({
-                status: false,
-                message: "Visit not found"
-            });
-        }
-
-        return res.status(200).json({
-            status: true,
-            message: "Visit fetched successfully",
-            data: visit
-        })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
 export const getNextVisit = async (req, res, next) => {
     const client = req.user._id
 
