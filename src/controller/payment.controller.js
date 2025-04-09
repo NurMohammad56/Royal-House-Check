@@ -5,6 +5,8 @@ import { paymentService } from "../services/payment.service.js";
 import { User } from "../model/user.model.js";
 import { Notification } from "../model/notfication.model.js";
 import Stripe from "stripe";
+import PDFDocument from "pdfkit";
+
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -174,11 +176,11 @@ export const confirmPayment = async (req, res, next) => {
         const payment = await Payment.findById(paymentId)
             .populate('user', 'fullname email')
             .populate('plan', 'name');
-            
+
         if (!payment) {
-            return res.status(404).json({ 
-                status: false, 
-                message: "Payment not found" 
+            return res.status(404).json({
+                status: false,
+                message: "Payment not found"
             });
         }
 
@@ -209,7 +211,7 @@ export const confirmPayment = async (req, res, next) => {
 
             // Create notifications array
             const notifications = [];
-            
+
             // Notification for purchasing user
             notifications.push({
                 userId: payment.user._id,
@@ -264,7 +266,7 @@ export const confirmPayment = async (req, res, next) => {
     }
 };
 
-export const getPaymentHistory = async (req, res, next) => {
+export const getUserPaymentHistory = async (req, res, next) => {
     try {
         const { userId } = req.params;
         const { page = 1, limit = 10 } = req.query;
@@ -290,6 +292,62 @@ export const getPaymentHistory = async (req, res, next) => {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalPayments / limit),
                 totalItems: totalPayments
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+export const getPaymentHistory = async (req, res, next) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+
+        // Get paginated payment history for user
+        const payments = await Payment.find()
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        const totalPayments = await Payment.countDocuments();
+
+        return res.status(200).json({
+            status: true,
+            message: "Payment history retrieved",
+            data: payments.map(p => ({
+                ...p.toObject(),
+                formattedAmount: `$${p.amount.toFixed(2)}`,
+                status: p.isActive ? "active" : p.status
+            })),
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalPayments / limit),
+                totalItems: totalPayments
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getPaymentById = async (req, res, next) => {
+    try {
+        const { paymentId } = req.params;
+        const payment = await Payment.findById(paymentId).populate("plan", "name features");
+
+        if (!payment) {
+            return res.status(404).json({
+                status: false,
+                message: "Payment not found"
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Payment found",
+            data: {
+                ...payment.toObject(),
+                formattedAmount: `$${payment.amount.toFixed(2)}`,
+                status: payment.isActive ? "active" : payment.status
             }
         });
     } catch (error) {
@@ -326,5 +384,44 @@ export const deactivateSubscription = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+export const downloadPaymentPdf = async (req, res, next) => {
+    try {
+        const { paymentId } = req.params;
+        const payment = await Payment.findById(paymentId).populate("plan", "name features");
+
+        if (!payment) {
+            return res.status(404).json({ status: false, message: "Payment not found" });
+        }
+
+        const doc = new PDFDocument();
+        res.setHeader("Content-Disposition", `attachment; filename=payment_${paymentId}.pdf`);
+        res.setHeader("Content-Type", "application/pdf");
+
+        doc.pipe(res);
+
+        doc.fontSize(20).text("Payment Receipt", { align: "center" });
+        doc.moveDown();
+
+        doc.fontSize(12).text(`Payment ID: ${payment._id}`);
+        doc.text(`User ID: ${payment.user}`);
+        doc.text(`Amount: $${payment.amount.toFixed(2)}`);
+        doc.text(`Status: ${payment.isActive ? "Active" : payment.status}`);
+        doc.text(`Date: ${payment.createdAt?.toLocaleString() || "N/A"}`);
+        doc.text(`Plan: ${payment.plan?.name || "N/A"}`);
+        doc.moveDown();
+
+        if (payment.plan?.features?.length > 0) {
+            doc.text("Plan Features:");
+            payment.plan.features.forEach((feature, i) => {
+                doc.text(`  • ${feature}`);
+            });
+        }
+
+        doc.end(); // Don't send any response after this
+    } catch (error) {
+        next(error); // let your error middleware handle this
     }
 };
