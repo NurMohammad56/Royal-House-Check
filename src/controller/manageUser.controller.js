@@ -2,50 +2,82 @@ import { User } from "../model/user.model.js";
 
 // Admin functionality
 export const getAllUsers = async (_, res, next) => {
-    try {
-        const users = await User.find({}, "id fullname email role status lastActive");
-        return res.status(200).json({
-            status: true,
-            message: "Fetched all users",
-            data: users,
-        });
-    } catch (error) {
-        console.error("Error fetching users:", error);
-        next(error);
-    }
+  try {
+    const users = await User.find({}, "id fullname email role status lastActive");
+    return res.status(200).json({
+      status: true,
+      message: "Fetched all users",
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    next(error);
+  }
+};
+
+// Get user by role (Admin functionality)
+export const getUserByRole = async (req, res, next) => {
+  const { role } = req.params;
+  try {
+    const users = await User.find({ role }, "id fullname email role status lastActive");
+    return res.status(200).json({
+      status: true,
+      message: `Fetched ${role} users`,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users by role:", error);
+    next(error);
+  }
+};
+
+// Get user by status
+export const getUserByStatus = async (req, res, next) => {
+  const { status } = req.params;
+  try {
+    const users = await User.find({ status }, "id fullname email role status lastActive");
+    return res.status(200).json({
+      status: true,
+      message: `Fetched ${status} users`,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users by status:", error);
+    next(error);
+  }
 };
 
 // Admin functionality
 export const addUser = async (req, res, next) => {
-    const { fullname, password, email, role } = req.body;
+  const { fullname, password, email, role } = req.body;
 
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ status: false, message: "User already exists" });
-        }
-
-        const newUser = new User({
-            fullname,
-            email,
-            password,
-            role,
-            status: "active",
-            lastActive: new Date(),
-            sessions : [{ sessionStartTime: Date.now() }],
-            isVerified: false
-        });
-
-        await newUser.save();
-        return res.status(201).json({
-            status: true,
-            message: "User created successfully",
-            data: newUser,
-        });
-    } catch (error) {
-        console.error("Error adding user:", error);
-        next(error);
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ status: false, message: "User already exists" });
     }
+
+    const newUser = new User({
+      fullname,
+      email,
+      password,
+      role,
+      status: "active",
+      lastActive: new Date(),
+      sessions: [{ sessionStartTime: Date.now() }],
+      isVerified: false
+    });
+
+    await newUser.save();
+    return res.status(201).json({
+      status: true,
+      message: "User created successfully",
+      data: newUser,
+    });
+  } catch (error) {
+    console.error("Error adding user:", error);
+    next(error);
+  }
 };
 
 // Update an existing user (Admin functionality)
@@ -55,10 +87,10 @@ export const updateUser = async (req, res, next) => {
 
   if (!fullname || !email) {
     return res.status(400).json({
-        status: false,
-        message: "Fullname and email are required."
+      status: false,
+      message: "Fullname and email are required."
     });
-}
+  }
 
   try {
     const user = await User.findById(id);
