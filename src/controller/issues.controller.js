@@ -31,21 +31,33 @@ export const addIssue = async (req, res, next) => {
     const { place, issue, type, notes } = req.body
 
     try {
-        console.log("images", req.files?.image[0].path)
-        console.log("videos", req.files?.video[0].path)
-        // const cloudinaryUpload = await uploadOnCloudinary(req.files.buffer, {
-        //     resource_type: "auto",
-        // });
-        // const cloudinaryUpload = await uploadOnCloudinary(req.files.buffer, {
-        //     resource_type: "auto",
-        // });
+        //creating image url
+        const cloudinaryUploadImage = await cloudinaryUpload(req.files?.image[0].path, {
+            resource_type: "auto",
+        });
 
-        // await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } })
+        //creating video url
+        const cloudinaryUploadVideo = await cloudinaryUpload(req.files?.video[0].path, {
+            resource_type: "auto",
+        });
 
-        // return res.status(200).json({
-        //     status: true,
-        //     message: "Issue added successfully"
-        // })
+        const imageUrl = cloudinaryUploadImage?.secure_url
+        const videoUrl = cloudinaryUploadVideo?.secure_url
+
+        const media = [{
+            type: "photo",
+            url: imageUrl
+        }, {
+            type: "video",
+            url: videoUrl
+        }]
+
+        await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } }).lean()
+
+        return res.status(200).json({
+            status: true,
+            message: "Issue added successfully"
+        })
     }
 
     catch (error) {
