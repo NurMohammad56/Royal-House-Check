@@ -48,35 +48,35 @@ export const addUser = async (req, res, next) => {
     }
 };
 
-// // Update an existing user (Admin functionality)
-// export const updateUser = async (req, res, next) => {
-//   const { id } = req.params;
-//   const { name, email, phone, role, status } = req.body;
+// Update an existing user (Admin functionality)
+export const updateUser = async (req, res, next) => {
+  const { id } = req.params;
+  const { fullname, password, email, role, status } = req.body;
 
-//   try {
-//     const user = await User.findById(id);
-//     if (!user) {
-//       return res.status(404).json({ status: false, message: "User not found" });
-//     }
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
 
-//     user.name = name || user.name;
-//     user.email = email || user.email;
-//     user.phone = phone || user.phone;
-//     user.role = role || user.role;
-//     user.status = status || user.status;
+    user.fullname = fullname || user.fullname;
+    user.email = email || user.email;
+    user.password = password || user.password;
+    user.role = role || user.role;
+    user.status = status || user.status;
 
-//     await user.save();
+    await user.save();
 
-//     return res.status(200).json({
-//       status: true,
-//       message: "User updated successfully",
-//       data: user,
-//     });
-//   } catch (error) {
-//     console.error("Error updating user:", error);
-//     next(error);
-//   }
-// };
+    return res.status(200).json({
+      status: true,
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    next(error);
+  }
+};
 
 // // Delete a user (Admin functionality)
 // export const deleteUser = async (req, res, next) => {
