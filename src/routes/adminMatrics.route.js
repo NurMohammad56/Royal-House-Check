@@ -19,7 +19,7 @@ const router = express.Router();
 router.get("/metrics/active-plans", verifyJWT, isAdmin, totalActivePlansController);
 router.get("/metrics/monthly-revenue", verifyJWT, isAdmin, monthlyRevenueController);
 router.get("/metrics/active-discounts", verifyJWT, isAdmin, activeDiscountsController);
-router.get("/metrics/total-user", verifyJWT, isAdmin, totalUserController);
+router.get("/metrics/total-client", verifyJWT, isAdmin, totalUserController);
 router.get("/metrics/total-admin", verifyJWT, isAdmin, totalAdminController);
 router.get("/metrics/total-staff", verifyJWT, isAdmin, totalStaffController);
 router.get("/metrics/active-users", verifyJWT, isAdmin, getActiveUsersController);
