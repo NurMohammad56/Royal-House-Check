@@ -12,7 +12,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         trim: true
     },
     email: {
@@ -76,6 +75,11 @@ const userSchema = new Schema({
         },
     ],
     lastActive: { type: Date },
+    status: { 
+        type: String,
+        enum: ["active", "resolve", "inactive"],
+        default: "active"
+    },
 },
     { timestamps: true }
 )

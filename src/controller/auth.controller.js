@@ -111,6 +111,9 @@ export const verifyRegistration = async (req, res, next) => {
             });
         }
 
+        user.status = "active",
+        user.lastActive = Date.now(),
+        user.sessions = [{ sessionStartTime: Date.now() }]
         user.isVerified = true;
         user.verificationCode = undefined;
         user.verificationCodeExpires = undefined;
@@ -203,6 +206,14 @@ export const verifyLogin = async (req, res, next) => {
             });
         }
 
+        // Update session on login
+        if (!user.sessions || user.sessions.length === 0) {
+            user.sessions = [{ sessionStartTime: Date.now() }];
+        } else {
+            user.sessions.push({ sessionStartTime: Date.now() });
+        }
+
+        user.lastActive = Date.now();
         // Clear verification code
         user.verificationCode = undefined;
         user.verificationCodeExpires = undefined;
