@@ -7,7 +7,8 @@ import {
     totalAdminController,
     totalStaffController,
     getActiveUsersController,
-    getRevenueGrowthController
+    getRevenueGrowthController,
+    getRecentUserActivityController
 } from "../controller/adminMatrics.controller.js";
 import {getAllUsers, addUser, updateUser, deleteUser} from '../controller/manageUser.controller.js'
 
@@ -25,12 +26,14 @@ router.get("/metrics/total-admin", verifyJWT, isAdmin, totalAdminController);
 router.get("/metrics/total-staff", verifyJWT, isAdmin, totalStaffController);
 router.get("/metrics/active-users", verifyJWT, isAdmin, getActiveUsersController);
 router.get("/metrics/revenue-growth", verifyJWT, isAdmin, getRevenueGrowthController);
+router.get("/metrics/recent-user-activity/:userId", verifyJWT, isAdmin, getRecentUserActivityController);
 
 // User managements
 router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
 router.post("/add-user", verifyJWT, isAdmin, addUser)
 router.put("/update-user/:id", verifyJWT, isAdmin, updateUser);
 router.delete("/delete-user/:id", verifyJWT, isAdmin, deleteUser);
+
 
 
 export default router;
