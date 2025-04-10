@@ -71,6 +71,11 @@ const paymentSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    paymentDate: {
+        type: Date,
+        default: Date.now,
+        index: true
+    }
 }, {
     toJSON: {
         virtuals: true,
@@ -84,6 +89,14 @@ const paymentSchema = new Schema({
             return ret;
         }
     }
+});
+
+// Save the date
+paymentSchema.pre('save', function (next) {
+    if (!this.paymentDate) {
+        this.paymentDate = new Date();
+    }
+    next();
 });
 
 // Indexes

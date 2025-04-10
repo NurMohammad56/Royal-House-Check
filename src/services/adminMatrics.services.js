@@ -76,3 +76,128 @@ export const getActiveUsersCount = async () => {
         console.error("Error getting active users count:", error);
     }
 }
+
+export const getPaymentGrowth = async (next) => {
+    try {
+        const now = new Date();
+
+        // Date ranges
+        const twelveMonthsAgo = new Date(now);
+        twelveMonthsAgo.setMonth(now.getMonth() - 12);
+
+        const sixMonthsAgo = new Date(now);
+        sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 7);
+
+        // Parallel aggregation queries
+        const [
+            twelveMonthsData,
+            sixMonthsData,
+            thirtyDaysData,
+            sevenDaysData,
+            monthlyData
+        ] = await Promise.all([
+            Payment.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: twelveMonthsAgo },
+                        status: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$amount" }
+                    }
+                }
+            ]),
+            Payment.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: sixMonthsAgo },
+                        status: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$amount" }
+                    }
+                }
+            ]),
+            Payment.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: thirtyDaysAgo },
+                        status: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$amount" }
+                    }
+                }
+            ]),
+            Payment.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: sevenDaysAgo },
+                        status: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$amount" }
+                    }
+                }
+            ]),
+            Payment.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: twelveMonthsAgo },
+                        status: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: "$createdAt" },
+                            month: { $month: "$createdAt" }
+                        },
+                        total: { $sum: "$amount" }
+                    }
+                },
+                {
+                    $sort: { "_id.year": 1, "_id.month": 1 }
+                }
+            ])
+        ]);
+
+        // Format monthly data for chart
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const chartData = monthlyData.map(item => ({
+            month: `${months[item._id.month - 1]} ${item._id.year}`,
+            total: item.total
+        }));
+
+        return {
+            periods: {
+                twelveMonths: twelveMonthsData[0]?.total || 0,
+                sixMonths: sixMonthsData[0]?.total || 0,
+                thirtyDays: thirtyDaysData[0]?.total || 0,
+                sevenDays: sevenDaysData[0]?.total || 0
+            },
+            chartData
+        };
+    } catch (error) {
+        next(error);
+    }
+};
