@@ -201,3 +201,19 @@ export const getPaymentGrowth = async (next) => {
         next(error);
     }
 };
+
+export const getRecentUserActivity = async (userId) => {
+    try {
+
+        const recentPayments = await Payment.find({ user: userId })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .populate("plan", "name price")
+            .lean();
+
+        return recentPayments;
+
+    } catch (error) {
+        throw new Error("Unable to fetch recent user activity. Please try again later.");
+    }
+};
