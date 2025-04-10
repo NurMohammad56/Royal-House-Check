@@ -77,7 +77,7 @@ const userSchema = new Schema({
     lastActive: { type: Date },
     status: { 
         type: String,
-        enum: ["active", "resolve", "inactive"],
+        enum: ["active", "inactive"],
         default: "active"
     },
 },

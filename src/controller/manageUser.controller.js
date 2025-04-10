@@ -33,7 +33,7 @@ export const addUser = async (req, res, next) => {
             status: "active",
             lastActive: new Date(),
             sessions : [{ sessionStartTime: Date.now() }],
-            isVerified: true
+            isVerified: false
         });
 
         await newUser.save();
@@ -52,6 +52,13 @@ export const addUser = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
   const { id } = req.params;
   const { fullname, password, email, role, status } = req.body;
+
+  if (!fullname || !email) {
+    return res.status(400).json({
+        status: false,
+        message: "Fullname and email are required."
+    });
+}
 
   try {
     const user = await User.findById(id);

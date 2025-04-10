@@ -13,23 +13,22 @@ const updateUserStatuses = async () => {
         });
 
         // Mark inactive users as inactive by setting sessionEndTime
-        if (inactiveUsers.length > 0) {
-            const updates = inactiveUsers.map((user) =>
-                User.findByIdAndUpdate(
-                    user._id,
-                    {
-                        $set: {
-                            "sessions.$[elem].sessionEndTime": new Date(),
-                            status: "inactive", // Update status to inactive
-                        },
-                    },
-                    {
-                        arrayFilters: [{ "elem.sessionEndTime": { $exists: false } }],
+        const now = Date.now(); 
+        await User.updateMany(
+            {
+                lastActive: { $lt: new Date(now - inactiveThreshold) },
+                status: "active"
+            },
+            {
+                $set: { status: "inactive" },
+                $push: {
+                    sessions: {
+                        sessionStartTime: now - inactiveThreshold,
+                        sessionEndTime: now
                     }
-                )
-            );
-            await Promise.all(updates);
-        }
+                }
+            }
+        );
 
         // Fetch all users who are active (lastActive <= 5 minutes ago)
         const activeUsers = await User.find({

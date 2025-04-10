@@ -14,14 +14,11 @@ export const getMonthlyRevenue = async () => {
     const startOfMonth = moment().startOf('month').toDate();
     const endOfMonth = moment().endOf('month').toDate();
 
-    console.log("Start of month:", startOfMonth);
-    console.log("End of month:", endOfMonth);
-
     try {
         const monthlyRevenue = await Payment.aggregate([
             {
                 $match: {
-                    status: "success",
+                    status: "completed",
                     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
                 },
             },
@@ -68,12 +65,13 @@ export const getActiveUsersCount = async () => {
     try {
         const currentTime = Date.now();
 
-        return User.countDocuments({
+        const count = await User.countDocuments({
             $or: [
                 { lastActive: { $gte: new Date(currentTime - activeThreshold) } },
                 { "sessions.sessionEndTime": { $exists: false } },
             ],
         });
+        return count;
     } catch (error) {
         console.error("Error getting active users count:", error);
     }
