@@ -188,6 +188,15 @@ export const confirmPayment = async (req, res, next) => {
         const startDate = new Date();
         let endDate = new Date();
 
+        await User.findByIdAndUpdate(payment.user._id, {
+            $set: {
+                "subscription.status": "paid",
+                "subscription.amount": payment.amount,
+                "subscription.plan": payment.plan.name?.toLowerCase(),
+                "subscription.type": `${payment.subscriptionType} `
+            }
+        });
+
         if (success) {
             if (payment.subscriptionType === 'monthly') {
                 endDate.setMonth(endDate.getMonth() + 1);

@@ -7,7 +7,7 @@ const router = express.Router();
 
 // User
 router.post("/create", verifyJWT,isClient, createPayment);
-router.put("/confirm/:paymentId", verifyJWT,isClient, confirmPayment);
+router.get("/confirm/:paymentId", verifyJWT,isClient, confirmPayment);
 
 
 // Admin
