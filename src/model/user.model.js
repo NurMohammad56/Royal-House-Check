@@ -12,7 +12,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         trim: true
     },
     email: {
@@ -65,6 +64,21 @@ const userSchema = new Schema({
     },
     resetPasswordExpires: {
         type: Date
+    },
+    sessions: [
+        {
+            sessionStartTime: {
+                type: Date,
+                default: Date.now,
+            },
+            sessionEndTime: { type: Date },
+        },
+    ],
+    lastActive: { type: Date },
+    status: { 
+        type: String,
+        enum: ["active", "resolve", "inactive"],
+        default: "active"
     },
 },
     { timestamps: true }

@@ -1,7 +1,7 @@
-import {Plan} from "../model/plan.model.js";
-import {Payment} from "../model/payment.model.js";
-import {Discount} from "../model/discount.model.js";
-import {User} from "../model/user.model.js";
+import { Plan } from "../model/plan.model.js";
+import { Payment } from "../model/payment.model.js";
+import { Discount } from "../model/discount.model.js";
+import { User } from "../model/user.model.js";
 import moment from "moment";
 
 // Get total active plans
@@ -11,8 +11,8 @@ export const getTotalActivePlans = async () => {
 
 // Get monthly revenue
 export const getMonthlyRevenue = async () => {
-    const startOfMonth = moment().startOf('month').toDate();  
-    const endOfMonth = moment().endOf('month').toDate();      
+    const startOfMonth = moment().startOf('month').toDate();
+    const endOfMonth = moment().endOf('month').toDate();
 
     console.log("Start of month:", startOfMonth);
     console.log("End of month:", endOfMonth);
@@ -21,7 +21,7 @@ export const getMonthlyRevenue = async () => {
         const monthlyRevenue = await Payment.aggregate([
             {
                 $match: {
-                    status: "success", 
+                    status: "success",
                     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
                 },
             },
@@ -48,8 +48,8 @@ export const getActiveDiscounts = async () => {
 };
 
 // Total user count
-export const totalUser = async () =>{
-    return await User.countDocuments({ role: "client"})
+export const totalUser = async () => {
+    return await User.countDocuments({ role: "client" })
 }
 
 // Total admin count
@@ -60,4 +60,21 @@ export const totalAdmin = async () => {
 // Total staff count
 export const totalStaff = async () => {
     return await User.countDocuments({ role: "staff" });
+}
+
+// Total active users count
+export const getActiveUsersCount = async () => {
+    const activeThreshold = 5 * 60 * 1000;
+    try {
+        const currentTime = Date.now();
+
+        return User.countDocuments({
+            $or: [
+                { lastActive: { $gte: new Date(currentTime - activeThreshold) } },
+                { "sessions.sessionEndTime": { $exists: false } },
+            ],
+        });
+    } catch (error) {
+        console.error("Error getting active users count:", error);
+    }
 }

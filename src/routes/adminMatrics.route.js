@@ -4,18 +4,29 @@ import {
     monthlyRevenueController,
     activeDiscountsController,
     totalUserController,
-    totalAdminController
-    
+    totalAdminController,
+    totalStaffController,
+    getActiveUsersController,
 } from "../controller/adminMatrics.controller.js";
+import {getAllUsers, addUser} from '../controller/manageUser.controller.js'
+
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js"
 
 const router = express.Router();
 
-router.get("/active-plans", verifyJWT, isAdmin, totalActivePlansController);
-router.get("/monthly-revenue", verifyJWT, isAdmin, monthlyRevenueController);
-router.get("/active-discounts", verifyJWT, isAdmin, activeDiscountsController);
-router.get("/total-user", verifyJWT, isAdmin, totalUserController);
-router.get("/total-admin", verifyJWT, isAdmin, totalAdminController);
+// Metrics
+router.get("/metrics/active-plans", verifyJWT, isAdmin, totalActivePlansController);
+router.get("/metrics/monthly-revenue", verifyJWT, isAdmin, monthlyRevenueController);
+router.get("/metrics/active-discounts", verifyJWT, isAdmin, activeDiscountsController);
+router.get("/metrics/total-user", verifyJWT, isAdmin, totalUserController);
+router.get("/metrics/total-admin", verifyJWT, isAdmin, totalAdminController);
+router.get("/metrics/total-staff", verifyJWT, isAdmin, totalStaffController);
+router.get("/metrics/active-users", verifyJWT, isAdmin, getActiveUsersController);
+
+// User managements
+router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
+router.post("/add-user", verifyJWT, isAdmin, addUser)
+
 
 export default router;

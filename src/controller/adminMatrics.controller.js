@@ -4,7 +4,8 @@ import {
     getActiveDiscounts,
     totalUser,
     totalAdmin,
-    totalStaff
+    totalStaff,
+    getActiveUsersCount
 } from "../services/adminMatrics.services.js";
 
 export const totalActivePlansController = async (_, res, next) => {
@@ -72,15 +73,29 @@ export const totalAdminController = async (_, res, next) => {
     }
 }
 
-// export const totalStaffController = async (_, res, next) => {
-//     try {
-//         const total = await totalStaff();
-//         return res.status(200).json({
-//             status: true,
-//             message: "Total staff fetched successfully",
-//             data: total
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// }
+export const totalStaffController = async (_, res, next) => {
+    try {
+        const total = await totalStaff();
+        return res.status(200).json({
+            status: true,
+            message: "Total staff fetched successfully",
+            data: total
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getActiveUsersController = async (_, res, next) => {
+    try {
+        const total = await getActiveUsersCount();
+        return res.status(200).json({
+            status: true,
+            message: "Fetched active users count for admin",
+            data: total,
+        });
+    } catch (error) {
+        console.error("Error getting active users count:", error);
+        next(error);
+    }
+};
