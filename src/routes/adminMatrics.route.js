@@ -4,8 +4,8 @@ import {
     monthlyRevenueController,
     activeDiscountsController,
     totalUserController,
-    totalAdminController
-    
+    totalAdminController,
+    totalStaffController
 } from "../controller/adminMatrics.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js"
@@ -17,5 +17,6 @@ router.get("/monthly-revenue", verifyJWT, isAdmin, monthlyRevenueController);
 router.get("/active-discounts", verifyJWT, isAdmin, activeDiscountsController);
 router.get("/total-user", verifyJWT, isAdmin, totalUserController);
 router.get("/total-admin", verifyJWT, isAdmin, totalAdminController);
+router.get("/total-staff", verifyJWT, isAdmin, totalStaffController);
 
 export default router;
