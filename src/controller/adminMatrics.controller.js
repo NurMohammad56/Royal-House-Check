@@ -59,18 +59,18 @@ export const totalUserController = async (_, res, next) => {
     }
 }
 
-// export const totalAdminController = async (_, res, next) => {
-//     try {
-//         const total = await totalAdmin();
-//         return res.status(200).json({
-//             status: true,
-//             message: "Total admins fetched successfully",
-//             data: total
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// }
+export const totalAdminController = async (_, res, next) => {
+    try {
+        const total = await totalAdmin();
+        return res.status(200).json({
+            status: true,
+            message: "Total admins fetched successfully",
+            data: total
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 // export const totalStaffController = async (_, res, next) => {
 //     try {
