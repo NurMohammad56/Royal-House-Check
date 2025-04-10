@@ -1,12 +1,15 @@
 import {Plan} from "../model/plan.model.js";
 import {Payment} from "../model/payment.model.js";
 import {Discount} from "../model/discount.model.js";
+import {User} from "../model/user.model.js";
 import moment from "moment";
 
+// Get total active plans
 export const getTotalActivePlans = async () => {
     return await Plan.countDocuments({ isActive: true });
 };
 
+// Get monthly revenue
 export const getMonthlyRevenue = async () => {
     const startOfMonth = moment().startOf('month').toDate();  
     const endOfMonth = moment().endOf('month').toDate();      
@@ -38,6 +41,23 @@ export const getMonthlyRevenue = async () => {
         throw new Error("Error calculating monthly revenue");
     }
 }
+
+// Get active discounts count
 export const getActiveDiscounts = async () => {
     return await Discount.countDocuments({ isActive: true });
 };
+
+// Total user count
+export const totalUser = async () =>{
+    return await User.countDocuments({ role: "client"})
+}
+
+// Total admin count
+export const totalAdmin = async () => {
+    return await User.countDocuments({ role: "admin" });
+}
+
+// Total staff count
+export const totalStaff = async () => {
+    return await User.countDocuments({ role: "staff" });
+}
