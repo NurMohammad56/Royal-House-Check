@@ -78,24 +78,22 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
-// // Delete a user (Admin functionality)
-// export const deleteUser = async (req, res, next) => {
-//   const { id } = req.params;
+// Delete a user (Admin functionality)
+export const deleteUser = async (req, res, next) => {
+  const { id } = req.params;
 
-//   try {
-//     const user = await User.findById(id);
-//     if (!user) {
-//       return res.status(404).json({ status: false, message: "User not found" });
-//     }
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
 
-//     await user.remove();
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "User deleted successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error deleting user:", error);
-//     next(error);
-//   }
-// };
+    return res.status(200).json({
+      status: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    next(error);
+  }
+};

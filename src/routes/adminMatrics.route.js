@@ -8,7 +8,7 @@ import {
     totalStaffController,
     getActiveUsersController,
 } from "../controller/adminMatrics.controller.js";
-import {getAllUsers, addUser, updateUser} from '../controller/manageUser.controller.js'
+import {getAllUsers, addUser, updateUser, deleteUser} from '../controller/manageUser.controller.js'
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js"
@@ -28,6 +28,7 @@ router.get("/metrics/active-users", verifyJWT, isAdmin, getActiveUsersController
 router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
 router.post("/add-user", verifyJWT, isAdmin, addUser)
 router.put("/update-user/:id", verifyJWT, isAdmin, updateUser);
+router.delete("/delete-user/:id", verifyJWT, isAdmin, deleteUser);
 
 
 export default router;
