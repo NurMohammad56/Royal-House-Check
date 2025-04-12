@@ -266,7 +266,6 @@ export const logout = async (req, res, next) => {
             });
         }
 
-        // Invalidate the refresh token
         const now = Date.now()
         // Close any open session
         const openSession = user.sessions.find(s => !s.sessionEndTime);
