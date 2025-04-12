@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js"
-import { cloudinaryUpload } from "../utils/cloudinary.utils.js";
+import { cloudinaryUploadImage, cloudinaryUploadVideo } from "../utils/cloudinary.utils.js";
 
 export const getAllIssues = async (req, res, next) => {
     const { visitId } = req.params
@@ -33,14 +33,13 @@ export const addIssue = async (req, res, next) => {
     try {
         const timestamp = Date.now();
 
-        //creating image url
-        const cloudinaryUploadImage = await cloudinaryUpload(req.files?.image[0].path, `visit-${visitId}-image-${timestamp}`, "issues/images");
+        const [cloudinaryImage, cloudinaryVideo] = await Promise.all([
+            cloudinaryUploadImage(req.files?.image[0].path, `visit-${visitId}-image-${timestamp}`, "issues/images"),
+            cloudinaryUploadVideo(req.files?.video[0].path, `visit-${visitId}-video-${timestamp}`, "issues/videos")
+        ]);
 
-        //creating video url
-        const cloudinaryUploadVideo = await cloudinaryUpload(req.files?.video[0].path, `visit-${visitId}-video-${timestamp}`, "issues/videos");
-
-        const imageUrl = cloudinaryUploadImage?.secure_url
-        const videoUrl = cloudinaryUploadVideo?.secure_url
+        const imageUrl = cloudinaryImage?.secure_url
+        const videoUrl = cloudinaryVideo?.secure_url
 
         const media = [{
             type: "photo",
