@@ -100,15 +100,16 @@ export const confirmPayment = async (req, res, next) => {
 
         if (!payment) {
             return res.status(404).json({
-                status: false,
+                status: true,
                 message: "Payment not found"
             });
         }
 
-        // Update visit status if payment was successful
+        // Update visit status and isPaid field if payment was successful
         if (success) {
             await Visit.findByIdAndUpdate(payment.visit._id, {
-                status: 'confirmed'
+                status: 'confirmed',
+                isPaid: true
             });
 
             // Get all admin users
@@ -256,7 +257,7 @@ export const getPaymentDetails = async (req, res, next) => {
 export const getPaymentById = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
-        const payment = await Payment.findById(paymentId).populate("plan", "name features");
+        const payment = await Payment.findById(paymentId)
 
         if (!payment) {
             return res.status(404).json({
@@ -277,43 +278,4 @@ export const getPaymentById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
-
-export const downloadPaymentPdf = async (req, res, next) => {
-    try {
-        const { paymentId } = req.params;
-        const payment = await Payment.findById(paymentId).populate("plan", "name features");
-
-        if (!payment) {
-            return res.status(404).json({ status: false, message: "Payment not found" });
-        }
-
-        const doc = new PDFDocument();
-        res.setHeader("Content-Disposition", `attachment; filename=payment_${paymentId}.pdf`);
-        res.setHeader("Content-Type", "application/pdf");
-
-        doc.pipe(res);
-
-        doc.fontSize(20).text("Payment Receipt", { align: "center" });
-        doc.moveDown();
-
-        doc.fontSize(12).text(`Payment ID: ${payment._id}`);
-        doc.text(`User ID: ${payment.user}`);
-        doc.text(`Amount: $${payment.amount.toFixed(2)}`);
-        doc.text(`Status: ${payment.isActive ? "Active" : payment.status}`);
-        doc.text(`Date: ${payment.createdAt?.toLocaleString() || "N/A"}`);
-        doc.text(`Plan: ${payment.plan?.name || "N/A"}`);
-        doc.moveDown();
-
-        if (payment.plan?.features?.length > 0) {
-            doc.text("Plan Features:");
-            payment.plan.features.forEach((feature, i) => {
-                doc.text(`  • ${feature}`);
-            });
-        }
-
-        doc.end(); // Don't send any response after this
-    } catch (error) {
-        next(error); // let your error middleware handle this
-    }
-};   
+};  
