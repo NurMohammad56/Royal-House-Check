@@ -31,15 +31,13 @@ export const addIssue = async (req, res, next) => {
     const { place, issue, type, notes } = req.body
 
     try {
+        const timestamp = Date.now();
+
         //creating image url
-        const cloudinaryUploadImage = await cloudinaryUpload(req.files?.image[0].path, {
-            resource_type: "auto",
-        });
+        const cloudinaryUploadImage = await cloudinaryUpload(req.files?.image[0].path, `visit-${visitId}-image-${timestamp}`, "issues/images");
 
         //creating video url
-        const cloudinaryUploadVideo = await cloudinaryUpload(req.files?.video[0].path, {
-            resource_type: "auto",
-        });
+        const cloudinaryUploadVideo = await cloudinaryUpload(req.files?.video[0].path, `visit-${visitId}-video-${timestamp}`, "issues/videos");
 
         const imageUrl = cloudinaryUploadImage?.secure_url
         const videoUrl = cloudinaryUploadVideo?.secure_url

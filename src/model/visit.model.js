@@ -76,7 +76,13 @@ const visitSchema = new Schema({
             type: String,
             trim: true
         }
-    }]
+    }],
+    isPaid: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: true });
+   
+
 
 export const Visit = mongoose.model("Visit", visitSchema);
