@@ -61,21 +61,24 @@ export const totalStaff = async () => {
 
 // Total active users count
 export const getActiveUsersCount = async () => {
-    const activeThreshold = 5 * 60 * 1000;
     try {
-        const currentTime = Date.now();
 
-        const count = await User.countDocuments({
-            $or: [
-                { lastActive: { $gte: new Date(currentTime - activeThreshold) } },
-                { "sessions.sessionEndTime": { $exists: false } },
-            ],
-        });
+        const count = await User.countDocuments({ status: "active" });
         return count;
     } catch (error) {
         console.error("Error getting active users count:", error);
     }
 }
+
+export const countInactiveUsers = async () => {
+    try {
+
+        const count = await User.countDocuments({ status: "inactive" });
+        return count;
+    } catch (error) {
+        console.error("Error getting active users count:", error);
+    }
+};
 
 export const getPaymentGrowth = async (next) => {
     try {

@@ -2,13 +2,15 @@ import express from "express";
 import { getNotifications, markNotificationAsRead, deleteNotification, getAdminNotifications, markAdminNotificationAsRead, deleteAdminNotification } from "../controller/notification.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import {  isClient , isAdmin} from "../middleware/role.middleware.js";
+import { updateUserActivity } from "../middleware/updateUserActivity.middleware.js";
+
 
 const router = express.Router();
 
 // Client
-router.get("/", verifyJWT, isClient, getNotifications);
-router.put("/:notificationId/read", verifyJWT,isClient, markNotificationAsRead);
-router.delete("/delete/:notificationId", verifyJWT,isClient, deleteNotification);
+router.get("/", verifyJWT, isClient, updateUserActivity, getNotifications);
+router.put("/:notificationId/read", verifyJWT,isClient,updateUserActivity, markNotificationAsRead);
+router.delete("/delete/:notificationId", verifyJWT,isClient, updateUserActivity, deleteNotification);
 
 // Admin
 router.get("/admin", verifyJWT, isAdmin, getAdminNotifications);

@@ -1,65 +1,30 @@
 import cron from "node-cron";
 import { User } from "../model/user.model.js";
 
-const updateUserStatuses = async () => {
-    const now = Date.now();
-    const inactiveThreshold = 10 * 60 * 1000;
-    const activeThreshold = 5 * 60 * 1000;
+const INACTIVITY_THRESHOLD = 10 * 60 * 1000; // 10 mins in milliseconds
 
-    try {
-        // Mark inactive users (no sessionEndTime + inactive > 10 mins)
-        const inactiveFilter = {
-            lastActive: { $lt: new Date(now - inactiveThreshold) },
-            "sessions.sessionEndTime": { $exists: false },
-            status: "active"
-        };
+export const checkInactiveUsers = async () => {
+    const now = new Date();
+    const cutoffTime = new Date(now - INACTIVITY_THRESHOLD);
 
-        const inactiveUsers = await User.find(inactiveFilter);
-
-        if (inactiveUsers.length > 0) {
-            await User.updateMany(
-                inactiveFilter,
-                {
-                    $set: { status: "inactive" },
-                    $push: {
-                        sessions: {
-                            sessionStartTime: new Date(now - inactiveThreshold),
-                            sessionEndTime: new Date(now)
-                        }
-                    }
-                }
-            );
-        }
-
-        // Mark active users (lastActive within last 5 mins)
-        const activeUsers = await User.find({
-            lastActive: { $gte: new Date(now - activeThreshold) },
-            status: { $ne: "active" }
-        });
-
-        if (activeUsers.length > 0) {
-            const updates = activeUsers.map(user =>
-                User.findByIdAndUpdate(user._id, {
-                    $set: { status: "active" }
-                })
-            );
-            await Promise.all(updates);
-        }
-
-        console.log(`Cron Ran: ${inactiveUsers.length} inactive, ${activeUsers.length} active.`);
-    } catch (error) {
-        console.error("Error updating user statuses:", error);
-    }
-};
-
-// Schedule the cron job to run every 5 minutes
-const startCronJob = () => {
-    cron.schedule("*/5 * * * *", () => {
-        console.log("Running updateUserStatuses cron job...");
-        updateUserStatuses();
+    // Find active users who were last seen >10 mins ago
+    const inactiveUsers = await User.find({
+        status: "active",
+        lastActive: { $lt: cutoffTime }, // Older than 10 mins
     });
 
-    console.log("node-cron scheduled to run every 5 minutes.");
+    // Mark them inactive + close sessions
+    for (const user of inactiveUsers) {
+        const openSession = user.sessions.find(s => !s.sessionEndTime);
+        if (openSession) {
+            openSession.sessionEndTime = now;
+        }
+        user.status = "inactive";
+        await user.save();
+    }
+
+    console.log(`[CRON] Marked ${inactiveUsers.length} users as inactive.`);
 };
 
-export { startCronJob };
+// Run every 5 minutes (for better accuracy)
+cron.schedule("*/5 * * * *", checkInactiveUsers);
