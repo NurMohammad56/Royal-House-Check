@@ -193,7 +193,7 @@ export const confirmPayment = async (req, res, next) => {
                 "subscription.status": "paid",
                 "subscription.amount": payment.amount,
                 "subscription.plan": payment.plan.name?.toLowerCase(),
-                "subscription.type": `${payment.subscriptionType} `
+                "subscription.type": `${payment.subscriptionType}`.trim()
             }
         });
 

@@ -89,7 +89,8 @@ export const verifyRegistration = async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ verificationCode: crypto.createHash("sha256").update(code).digest("hex") });
+        const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
+        const user = await User.findOne({ verificationCode: hashedCode });
         if (!user) {
             return res.status(404).json({
                 status: false,
@@ -431,6 +432,15 @@ export const logout = async (req, res, next) => {
 
         // Invalidate the refresh token
         user.refreshToken = undefined;
+        user.sessions = (user.sessions || []).map((session) => {
+            if (!session.sessionEndTime) {
+                session.sessionEndTime = Date.now();
+            }
+            return session;
+        });
+
+        user.lastActive = Date.now();
+        user.status = "inactive";
         await user.save();
 
         return res.status(200).json({

@@ -36,7 +36,7 @@ const paymentSchema = new Schema({
     },
     subscriptionType: {
         type: String,
-        enum: ["monthly", "yearly"],
+        enum: ["monthly", "yearly", "weekly"],
         required: true,
     },
     startDate: {

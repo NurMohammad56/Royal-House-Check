@@ -6,7 +6,8 @@ import {
     totalAdmin,
     totalStaff,
     getActiveUsersCount,
-    getPaymentGrowth
+    getPaymentGrowth,
+    getRecentUserActivity
 } from "../services/adminMatrics.services.js";
 
 export const totalActivePlansController = async (_, res, next) => {
@@ -109,6 +110,21 @@ export const getRevenueGrowthController = async (_, res, next) => {
             status: true,
             message: "Payment growth data fetched successfully",
             data: growthData
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getRecentUserActivityController = async (req, res, next) => {
+    try {
+        const { userId } = req.params; 
+        const recentActivity = await getRecentUserActivity(userId);
+        
+        return res.json({
+            status: true,
+            message: "Recent user activity fetched successfully",
+            data: recentActivity
         });
     } catch (error) {
         next(error);
