@@ -37,7 +37,7 @@ const userSchema = new Schema({
         },
         type: {
             type: String,
-            enum: ["monthly subscription", "yearly subscription", "weekly subscription"],
+            enum: ["monthly", "yearly", "weekly"],
         },
         amount: {
             type: Number,
