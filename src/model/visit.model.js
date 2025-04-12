@@ -71,7 +71,15 @@ const visitSchema = new Schema({
             type: String,
             trim: true
         }
-    }]
+    }],
+    isPaid: {
+        type: Boolean,
+        default: false
+    },
+    amount: {
+        type: Number,
+        default: 0,
+    },
 
 }, { timestamps: true })
 
