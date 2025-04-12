@@ -7,6 +7,6 @@ const router = Router();
 
 router.get('/get-all-issues/:visitId', verifyJWT, getAllIssues);
 
-router.patch('/update-add-issue/:visitId', uploadFields, addIssue);
+router.patch('/update-add-issue/:visitId', verifyJWT, uploadFields, addIssue);
 
 export default router;

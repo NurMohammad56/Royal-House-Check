@@ -16,14 +16,14 @@ cloudinary.config({
   api_secret: CLOUDINARY_API_SECRET,
 });
 
-const cloudinaryUpload = async (filePath, public_id, folder, resourceType = "image") => {
+const cloudinaryUpload = async (filePath, public_id, folder) => {
   let uploadResult;
 
   try {
     uploadResult = await cloudinary.uploader.upload(filePath, {
       public_id,
       folder,
-      resource_type: resourceType,
+      resource_type: "auto",
       chunk_size: 6000000, // 6MB chunks for video uploads
       timeout: 120000, // 2 minutes timeout
     });
@@ -41,10 +41,10 @@ const cloudinaryUpload = async (filePath, public_id, folder, resourceType = "ima
   }
 };
 
-const cloudinaryDelete = async (public_id, resourceType = "image") => {
+const cloudinaryDelete = async (public_id) => {
   try {
     await cloudinary.uploader.destroy(public_id, {
-      resource_type: resourceType
+      resource_type: "auto"
     });
   } catch (error) {
     console.error("Cloudinary delete error:", error);
