@@ -26,6 +26,9 @@ const notificationSchema = new Schema({
         type: String,
         enum: ["Payment", "User", "Plan"]
       },
+      metadata: {
+        type: Schema.Types.Mixed
+    },
     createdAt: {
         type: Date,
         default: Date.now()

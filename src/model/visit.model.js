@@ -1,10 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
-
     visitCode: {
         type: String,
         required: true,
+        unique: true
     },
     client: {
         type: Schema.Types.ObjectId,
@@ -24,6 +24,11 @@ const visitSchema = new Schema({
     date: {
         type: Date,
         required: true
+    },
+    amount: {
+        type: Number,
+        required: true,
+        get: v => parseFloat(v.toFixed(2))
     },
     status: {
         type: String,
@@ -72,7 +77,6 @@ const visitSchema = new Schema({
             trim: true
         }
     }]
+}, { timestamps: true });
 
-}, { timestamps: true })
-
-export const Visit = mongoose.model("Visit", visitSchema)
+export const Visit = mongoose.model("Visit", visitSchema);

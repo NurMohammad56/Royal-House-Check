@@ -1,21 +1,27 @@
 import express from "express";
-import {createPayment, confirmPayment, getUserPaymentHistory, deactivateSubscription, getPaymentHistory, downloadPaymentPdf } from "../controller/payment.controller.js";
+import {
+    createVisitPayment,
+    confirmPayment,
+    refundPayment,
+    getUserPayments,
+    getPaymentDetails,
+    getPaymentById,
+    downloadPaymentPdf
+} from "../controller/payment.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { isAdmin, isClient } from "../middleware/role.middleware.js";
+import {isAdmin, isClient} from "../middleware/role.middleware.js"
 
 const router = express.Router();
 
 // User
-router.post("/create", verifyJWT,isClient, createPayment);
-router.get("/confirm/:paymentId", verifyJWT,isClient, confirmPayment);
-
+router.post("/visit-payment", verifyJWT, isClient, createVisitPayment);
+router.post("/confirm/:paymentId", verifyJWT, isClient, confirmPayment);
+router.post("/refund/:paymentId", verifyJWT, isClient, refundPayment);
+router.get("/user/:userId", verifyJWT, isClient, getUserPayments);
 
 // Admin
-router.get("/history-admin", verifyJWT, isAdmin, getPaymentHistory);
-router.put("/:paymentId/deactivate", verifyJWT, isAdmin, deactivateSubscription);
-
-// User
-router.get("/history-user/:userId", verifyJWT, isClient, getUserPaymentHistory);
-router.get("/downloadPDF/:paymentId", verifyJWT, isClient, downloadPaymentPdf);
+router.get("/details/:paymentId", verifyJWT, isAdmin, getPaymentDetails);
+router.get("/:paymentId", verifyJWT,isAdmin, getPaymentById);
+router.get("/download/:paymentId", verifyJWT,isAdmin, downloadPaymentPdf);
 
 export default router;

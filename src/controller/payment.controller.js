@@ -1,157 +1,73 @@
 import { Payment } from "../model/payment.model.js";
-import { Plan } from "../model/plan.model.js";
-import { Discount } from "../model/discount.model.js";
-import { paymentService } from "../services/payment.service.js";
-import { User } from "../model/user.model.js";
+import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import Stripe from "stripe";
-import PDFDocument from "pdfkit";
+import { User } from "../model/user.model.js";
+import { stripeService } from "../services/stripe.service.js"
 
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export const createPayment = async (req, res, next) => {
+export const createVisitPayment = async (req, res, next) => {
     try {
-        const { planID, subscriptionType, voucherCode, paymentMethod = "stripe" } = req.body;
+        const { visitId, paymentMethod = "stripe" } = req.body;
         const userId = req.user?._id;
 
         // Validate payment method
-        const supportedMethods = ["stripe"];
-        if (!supportedMethods.includes(paymentMethod)) {
+        if (paymentMethod !== "stripe") {
             return res.status(400).json({
                 status: false,
                 message: "Unsupported payment method"
             });
         }
 
-        // Validate plan exists
-        const plan = await Plan.findById(planID);
-        if (!plan) {
+        // Get the visit
+        const visit = await Visit.findById(visitId);
+        if (!visit) {
             return res.status(404).json({
                 status: false,
-                message: "Plan not found"
+                message: "Visit not found"
             });
         }
 
-        // Get base amount
-        const baseAmount = subscriptionType === "monthly"
-            ? parseFloat(plan.monthlyPrice.toString().replace(/[^0-9.]/g, ''))
-            : parseFloat(plan.yearlyPrice.toString().replace(/[^0-9.]/g, ''));
-
-        if (isNaN(baseAmount)) {
-            return res.status(400).json({
+        // Verify the visit belongs to the user
+        if (visit.client.toString() !== userId.toString()) {
+            return res.status(403).json({
                 status: false,
-                message: "Invalid plan pricing"
+                message: "Unauthorized access to this visit"
             });
         }
 
-        // Apply discount if voucher exists
-        let discountInfo = null;
-        let finalAmount = baseAmount;
-
-        if (voucherCode) {
-            const discount = await Discount.findOne({
-                voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') }, // Case insensitive
-                planID,
-                isActive: true,
-                startDate: { $lte: new Date() },
-                endDate: { $gte: new Date() },
-            });
-
-            if (!discount) {
-                // Detailed error information for debugging
-                const exists = await Discount.exists({ voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') } });
-                const activeForPlan = await Discount.exists({
-                    voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') },
-                    planID
-                });
-                const activeNow = await Discount.exists({
-                    voucherCode: { $regex: new RegExp(`^${voucherCode}$`, 'i') },
-                    startDate: { $lte: new Date() },
-                    endDate: { $gte: new Date() }
-                });
-
-                return res.status(400).json({
-                    status: false,
-                    message: "Invalid or expired discount voucher",
-                    details: {
-                        voucherExists: exists,
-                        validForPlan: activeForPlan,
-                        currentlyActive: activeNow,
-                        currentDate: new Date()
-                    }
-                });
-            }
-
-            const discountAmount = baseAmount * (discount.discountPercentage / 100);
-            finalAmount = parseFloat((baseAmount - discountAmount).toFixed(2));
-
-            discountInfo = {
-                voucherCode: discount.voucherCode,
-                discountPercentage: discount.discountPercentage,
-                originalAmount: baseAmount,
-                discountAmount: parseFloat(discountAmount.toFixed(2)),
-                finalAmount,
-            };
-        }
-
-        // Create payment in database first
+        // Create payment in database
         const paymentRecord = await Payment.create({
             user: userId,
-            plan: planID,
-            amount: finalAmount,
-            originalAmount: baseAmount,
-            subscriptionType,
+            visit: visitId,
+            amount: visit.amount,
             paymentMethod,
-            status: 'pending',
-            isActive: false,
-            startDate: new Date(),
-            endDate: new Date(),
-            ...(discountInfo && {
-                discount: {
-                    voucherCode: discountInfo.voucherCode,
-                    discountPercentage: discountInfo.discountPercentage,
-                    amountSaved: discountInfo.discountAmount
-                }
-            }),
+            status: 'pending'
         });
 
         // Create Stripe payment intent
-        const amountInCents = Math.round(finalAmount * 100);
-        let paymentIntent;
+        const { clientSecret, paymentIntentId } = await stripeService.createPaymentIntent(
+            visit.amount,
+            "usd",
+            {
+                userId: userId.toString(),
+                visitId: visitId.toString(),
+                paymentId: paymentRecord._id.toString(),
+            }
+        );
 
-        if (paymentMethod === "stripe") {
-            paymentIntent = await stripe.paymentIntents.create({
-                amount: amountInCents,
-                currency: "usd",
-                metadata: {
-                    userId: userId?.toString() || "guest",
-                    planID,
-                    subscriptionType,
-                    paymentId: paymentRecord._id.toString(),
-                    voucherCode: voucherCode || "none",
-                    paymentMethod,
-                },
-            });
-
-            // Update payment record with Stripe payment ID
-            await Payment.findByIdAndUpdate(paymentRecord._id, {
-                paymentProviderId: paymentIntent.id
-            });
-        }
+        // Update payment with Stripe reference
+        await Payment.findByIdAndUpdate(paymentRecord._id, {
+            transactionId: paymentIntentId
+        });
 
         return res.status(200).json({
-            status: true,
+            success: true,
             message: "Payment initiated",
             data: {
                 paymentId: paymentRecord._id,
-                stripePaymentId: paymentIntent?.id,
-                amount: finalAmount,
-                originalAmount: baseAmount,
+                amount: visit.amount,
                 currency: "USD",
-                paymentMethod,
-                clientSecret: paymentIntent?.client_secret || null,
-                discount: discountInfo,
+                clientSecret,
             },
         });
     } catch (error) {
@@ -162,7 +78,7 @@ export const createPayment = async (req, res, next) => {
 export const confirmPayment = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
-        const { success, transactionId } = req.body;
+        const { success } = req.body;
 
         // Validate success status
         if (typeof success !== 'boolean') {
@@ -172,10 +88,15 @@ export const confirmPayment = async (req, res, next) => {
             });
         }
 
-        // Find payment with user and plan details
-        const payment = await Payment.findById(paymentId)
-            .populate('user', 'fullname email')
-            .populate('plan', 'name');
+        // Find and update payment
+        const payment = await Payment.findByIdAndUpdate(
+            paymentId,
+            {
+                status: success ? 'completed' : 'failed',
+                paymentDate: new Date()
+            },
+            { new: true }
+        ).populate('visit').populate('user', 'name email');
 
         if (!payment) {
             return res.status(404).json({
@@ -184,28 +105,17 @@ export const confirmPayment = async (req, res, next) => {
             });
         }
 
-        // Calculate subscription period
-        const startDate = new Date();
-        let endDate = new Date();
-
-        await User.findByIdAndUpdate(payment.user._id, {
-            $set: {
-                "subscription.status": "paid",
-                "subscription.amount": payment.amount,
-                "subscription.plan": payment.plan.name?.toLowerCase(),
-                "subscription.type": `${payment.subscriptionType}`.trim()
-            }
-        });
-
+        // Update visit status if payment was successful
         if (success) {
-            if (payment.subscriptionType === 'monthly') {
-                endDate.setMonth(endDate.getMonth() + 1);
-            } else if (payment.subscriptionType === 'yearly') {
-                endDate.setFullYear(endDate.getFullYear() + 1);
-            }
+            await Visit.findByIdAndUpdate(payment.visit._id, {
+                status: 'confirmed'
+            });
 
-            // Format dates for notifications
-            const formattedEndDate = endDate.toLocaleString("en-US", {
+            // Get all admin users
+            const adminUsers = await User.find({ role: "admin" }).select("_id");
+
+            // Format the visit date
+            const visitDate = payment.visit.date.toLocaleString("en-US", {
                 weekday: "short",
                 year: "numeric",
                 month: "short",
@@ -215,74 +125,89 @@ export const confirmPayment = async (req, res, next) => {
                 hour12: true
             });
 
-            // Get all admin users
-            const adminUsers = await User.find({ role: "admin" }).select("_id");
-
-            // Create notifications array
-            const notifications = [];
-
-            // Notification for purchasing user
-            notifications.push({
-                userId: payment.user._id,
-                type: "subscription",
-                message: `Your ${payment.subscriptionType} subscription (${payment.plan.name}) for $${payment.amount} has been activated! Valid until ${formattedEndDate}`,
+            // Create notifications for admins
+            const notifications = adminUsers.map(admin => ({
+                userId: admin._id,
+                type: "payment",
+                message: `New payment of $${payment.amount.toFixed(2)} received for visit ${payment.visit.visitCode} scheduled on ${visitDate}`,
                 relatedEntity: payment._id,
-                relatedEntityModel: "Payment"
-            });
-
-            // Notifications for all admins
-            adminUsers.forEach(admin => {
-                notifications.push({
-                    userId: admin._id,
-                    type: "subscription",
-                    message: `New ${payment.subscriptionType} subscription (${payment.plan.name}) purchased by ${payment.user.fullname} (${payment.user.email}) for $${payment.amount}`,
-                    relatedEntity: payment._id,
-                    relatedEntityModel: "Payment",
-                    metadata: {
-                        discountApplied: payment.discount ? true : false,
-                        originalAmount: payment.originalAmount,
-                        finalAmount: payment.amount
-                    }
-                });
-            });
+                relatedEntityModel: "Payment",
+                metadata: {
+                    visitId: payment.visit._id,
+                    clientName: payment.user.name,
+                    clientEmail: payment.user.email,
+                    visitAddress: payment.visit.address
+                }
+            }));
 
             // Save all notifications
             if (notifications.length > 0) {
                 await Notification.insertMany(notifications);
             }
-        }
 
-        // Update payment status
-        const updatedPayment = await Payment.findByIdAndUpdate(
-            paymentId,
-            {
-                status: success ? 'completed' : 'failed',
-                transactionId: transactionId || null,
-                isActive: success,
-                startDate: success ? startDate : undefined,
-                endDate: success ? endDate : undefined,
-            },
-            { new: true }
-        );
+            // Also create a notification for the user
+            await Notification.create({
+                userId: payment.user._id,
+                type: "payment",
+                message: `Your payment of $${payment.amount.toFixed(2)} for visit ${payment.visit.visitCode} has been confirmed`,
+                relatedEntity: payment._id,
+                relatedEntityModel: "Payment"
+            });
+        }
 
         return res.status(200).json({
             status: true,
             message: success ? "Payment confirmed" : "Payment failed",
-            data: updatedPayment
+            data: payment
         });
     } catch (error) {
         next(error);
     }
 };
 
-export const getUserPaymentHistory = async (req, res, next) => {
+export const refundPayment = async (req, res, next) => {
+    try {
+        const { paymentId } = req.params;
+
+        const payment = await Payment.findById(paymentId);
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment not found"
+            });
+        }
+
+        // Validate payment can be refunded
+        if (payment.status !== 'completed') {
+            return res.status(400).json({
+                success: false,
+                message: "Only completed payments can be refunded"
+            });
+        }
+
+        // Here you would integrate with Stripe's refund API
+        // This is a placeholder for the refund logic
+        await Payment.findByIdAndUpdate(paymentId, {
+            status: 'refunded',
+            refundDate: new Date()
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Refund processed successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getUserPayments = async (req, res, next) => {
     try {
         const { userId } = req.params;
         const { page = 1, limit = 10 } = req.query;
 
-        // Get paginated payment history for user
         const payments = await Payment.find({ user: userId })
-            .populate("plan", "name features")
+            .populate("visit", "visitCode date status")
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
@@ -291,12 +216,8 @@ export const getUserPaymentHistory = async (req, res, next) => {
 
         return res.status(200).json({
             status: true,
-            message: "Payment history retrieved",
-            data: payments.map(p => ({
-                ...p.toObject(),
-                formattedAmount: `$${p.amount.toFixed(2)}`,
-                status: p.isActive ? "active" : p.status
-            })),
+            message: "Payments retrieved",
+            data: payments,
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalPayments / limit),
@@ -307,31 +228,25 @@ export const getUserPaymentHistory = async (req, res, next) => {
         next(error);
     }
 };
-export const getPaymentHistory = async (req, res, next) => {
+
+export const getPaymentDetails = async (req, res, next) => {
     try {
-        const { page = 1, limit = 10 } = req.query;
+        const { paymentId } = req.params;
+        const payment = await Payment.findById(paymentId)
+            .populate("visit")
+            .populate("user", "name email");
 
-        // Get paginated payment history for user
-        const payments = await Payment.find()
-            .sort({ createdAt: -1 })
-            .skip((page - 1) * limit)
-            .limit(limit);
-
-        const totalPayments = await Payment.countDocuments();
+        if (!payment) {
+            return res.status(404).json({
+                status: false,
+                message: "Payment not found"
+            });
+        }
 
         return res.status(200).json({
             status: true,
-            message: "Payment history retrieved",
-            data: payments.map(p => ({
-                ...p.toObject(),
-                formattedAmount: `$${p.amount.toFixed(2)}`,
-                status: p.isActive ? "active" : p.status
-            })),
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(totalPayments / limit),
-                totalItems: totalPayments
-            }
+            message: "Payment details retrieved",
+            data: payment
         });
     } catch (error) {
         next(error);
@@ -357,38 +272,6 @@ export const getPaymentById = async (req, res, next) => {
                 ...payment.toObject(),
                 formattedAmount: `$${payment.amount.toFixed(2)}`,
                 status: payment.isActive ? "active" : payment.status
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const deactivateSubscription = async (req, res, next) => {
-    try {
-        const { paymentId } = req.params;
-
-        // Deactivate subscription
-        const subscription = await Payment.findByIdAndUpdate(
-            paymentId,
-            {
-                isActive: false,
-                status: "cancelled",
-                endDate: new Date()
-            },
-            { new: true }
-        );
-
-        if (!subscription) {
-            return res.status(404).json({ status: false, message: "Subscription not found" });
-        }
-
-        return res.status(200).json({
-            status: true,
-            message: "Subscription cancelled",
-            data: {
-                ...subscription.toObject(),
-                endDate: subscription.endDate.toISOString()
             }
         });
     } catch (error) {
@@ -433,4 +316,4 @@ export const downloadPaymentPdf = async (req, res, next) => {
     } catch (error) {
         next(error); // let your error middleware handle this
     }
-};
+};   

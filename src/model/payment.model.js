@@ -6,15 +6,10 @@ const paymentSchema = new Schema({
         ref: "User",
         required: true,
     },
-    plan: {
+    visit: {
         type: Schema.Types.ObjectId,
-        ref: "Plan",
+        ref: "Visit",
         required: true,
-    },
-    originalAmount: {
-        type: Number,
-        required: true,
-        get: v => parseFloat(v.toFixed(2))
     },
     amount: {
         type: Number,
@@ -28,44 +23,13 @@ const paymentSchema = new Schema({
     },
     transactionId: {
         type: String,
-        index: {
-            unique: true,
-            partialFilterExpression: { transactionId: { $type: "string" } }
-        },
-        default: null
-    },
-    subscriptionType: {
-        type: String,
-        enum: ["monthly", "yearly", "weekly"],
-        required: true,
-    },
-    startDate: {
-        type: Date,
-        required: true,
-    },
-    endDate: {
-        type: Date,
-        required: true,
-    },
-    isActive: {
-        type: Boolean,
-        default: true,
+        unique: true,
+        sparse: true
     },
     paymentMethod: {
         type: String,
         required: true,
         enum: ["stripe"]
-    },
-    discount: {
-        type: {
-            code: String,
-            percentage: Number,
-            amount: {
-                type: Number,
-                get: v => v ? parseFloat(v.toFixed(2)) : v
-            }
-        },
-        default: undefined
     },
     createdAt: {
         type: Date,
@@ -82,27 +46,14 @@ const paymentSchema = new Schema({
         getters: true,
         transform: (doc, ret) => {
             ret.formattedAmount = `$${ret.amount.toFixed(2)}`;
-            ret.formattedOriginalAmount = `$${ret.originalAmount.toFixed(2)}`;
-            if (ret.discount?.amount) {
-                ret.discount.amount = parseFloat(ret.discount.amount.toFixed(2));
-            }
             return ret;
         }
     }
 });
 
-// Save the date
-paymentSchema.pre('save', function (next) {
-    if (!this.paymentDate) {
-        this.paymentDate = new Date();
-    }
-    next();
-});
-
 // Indexes
 paymentSchema.index({ user: 1 });
+paymentSchema.index({ visit: 1 });
 paymentSchema.index({ status: 1 });
-paymentSchema.index({ isActive: 1 });
-paymentSchema.index({ endDate: 1 });
 
 export const Payment = mongoose.model("Payment", paymentSchema);
