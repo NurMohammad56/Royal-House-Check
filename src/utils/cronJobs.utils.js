@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { User } from "../model/user.model.js";
 
-const INACTIVITY_THRESHOLD = 10 * 60 * 1000; // 10 mins in milliseconds
+const INACTIVITY_THRESHOLD = 10 * 60 * 1000; 
 
 export const checkInactiveUsers = async () => {
     const now = new Date();
@@ -10,7 +10,7 @@ export const checkInactiveUsers = async () => {
     // Find active users who were last seen >10 mins ago
     const inactiveUsers = await User.find({
         status: "active",
-        lastActive: { $lt: cutoffTime }, // Older than 10 mins
+        lastActive: { $lt: cutoffTime },
     });
 
     // Mark them inactive + close sessions
@@ -23,7 +23,6 @@ export const checkInactiveUsers = async () => {
         await user.save();
     }
 
-    console.log(`[CRON] Marked ${inactiveUsers.length} users as inactive.`);
 };
 
 // Run every 5 minutes (for better accuracy)
