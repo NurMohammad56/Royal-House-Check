@@ -82,7 +82,7 @@ const visitSchema = new Schema({
         default: false
     },
 }, { timestamps: true });
-   
+
 
 
 export const Visit = mongoose.model("Visit", visitSchema);
