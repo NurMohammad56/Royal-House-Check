@@ -208,17 +208,15 @@ export const verifyLogin = async (req, res, next) => {
         }
 
         // Update session on login
-        if (user.sessions && user.sessions.length > 0) {
-            const lastSession = user.sessions[user.sessions.length - 1];
-            if (!lastSession.sessionEndTime) {
-                lastSession.sessionStartTime = Date.now(); // Update existing session
-            } else {
-                user.sessions.push({ sessionStartTime: Date.now() }); // Start a new session
-            }
-        } else {
-            user.sessions = [{ sessionStartTime: Date.now() }];
-        }
-        user.lastActive = Date.now();
+        const now = Date.now();
+        user.sessions.push({
+            sessionStartTime: now,
+            sessionEndTime: null
+        });
+
+        user.lastActive = now;
+        user.status = "active";
+
         // Clear verification code
         user.verificationCode = undefined;
         user.verificationCodeExpires = undefined;
@@ -242,6 +240,47 @@ export const verifyLogin = async (req, res, next) => {
                 }
             },
             token: accessToken
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Logout user
+export const logout = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({
+                status: false,
+                message: "Refresh token is required."
+            });
+        }
+
+        const user = await User.findOne({ refreshToken });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "Invalid refresh token."
+            });
+        }
+
+        // Invalidate the refresh token
+        const now = Date.now()
+        // Close any open session
+        const openSession = user.sessions.find(s => !s.sessionEndTime);
+        if (openSession) {
+            openSession.sessionEndTime = now;
+        }
+
+        user.status = "inactive";
+        user.refreshToken = undefined;
+        await user.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "Logged out successfully."
         });
     } catch (error) {
         next(error);
@@ -405,48 +444,6 @@ export const resetPassword = async (req, res, next) => {
                 message: "Password reset was successful, but we couldn't send the confirmation email."
             });
         }
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Logout user
-export const logout = async (req, res, next) => {
-    try {
-        const { refreshToken } = req.body;
-
-        if (!refreshToken) {
-            return res.status(400).json({
-                status: false,
-                message: "Refresh token is required."
-            });
-        }
-
-        const user = await User.findOne({ refreshToken });
-        if (!user) {
-            return res.status(404).json({
-                status: false,
-                message: "Invalid refresh token."
-            });
-        }
-
-        // Invalidate the refresh token
-        user.refreshToken = undefined;
-        user.sessions = (user.sessions || []).map((session) => {
-            if (!session.sessionEndTime) {
-                session.sessionEndTime = Date.now();
-            }
-            return session;
-        });
-
-        user.lastActive = Date.now();
-        user.status = "inactive";
-        await user.save();
-
-        return res.status(200).json({
-            status: true,
-            message: "Logged out successfully."
-        });
     } catch (error) {
         next(error);
     }

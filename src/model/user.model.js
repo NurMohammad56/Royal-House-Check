@@ -25,25 +25,6 @@ const userSchema = new Schema({
         enum: ["admin", "client", "staff"],
         default: "client",
     },
-    subscription: {
-        status: {
-            type: String,
-            enum: ["paid", "unpaid"],
-            default: "unpaid",
-        },
-        plan: {
-            type: String,
-            enum: ["basic", "professional", "enterprise"]
-        },
-        type: {
-            type: String,
-            enum: ["monthly", "yearly", "weekly"],
-        },
-        amount: {
-            type: Number,
-            default: 0
-        },
-    },
     refreshToken: {
         type: String,
     },
@@ -67,15 +48,12 @@ const userSchema = new Schema({
     },
     sessions: [
         {
-            sessionStartTime: {
-                type: Date,
-                default: Date.now,
-            },
+            sessionStartTime: { type: Date, default: Date.now },
             sessionEndTime: { type: Date },
         },
     ],
     lastActive: { type: Date },
-    status: { 
+    status: {
         type: String,
         enum: ["active", "inactive"],
         default: "active"
@@ -83,6 +61,14 @@ const userSchema = new Schema({
 },
     { timestamps: true }
 )
+
+// Update lastActive on every save
+userSchema.pre("save", function (next) {
+    if (this.isModified("status") || this.isModified("sessions")) {
+        this.lastActive = new Date();
+    }
+    next();
+});
 
 // Hashing password
 userSchema.pre("save", async function (next) {
