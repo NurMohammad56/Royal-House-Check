@@ -16,16 +16,38 @@ cloudinary.config({
   api_secret: CLOUDINARY_API_SECRET,
 });
 
-const cloudinaryUpload = async (filePath, public_id, folder) => {
+const cloudinaryUploadImage = async (filePath, public_id, folder) => {
   let uploadResult;
 
   try {
     uploadResult = await cloudinary.uploader.upload(filePath, {
       public_id,
       folder,
-      resource_type: "auto",
-      chunk_size: 6000000, // 6MB chunks for video uploads
-      timeout: 120000, // 2 minutes timeout
+      resource_type: "image",
+    });
+
+    fs.unlinkSync(filePath);
+    return uploadResult;
+  }
+
+  catch (error) {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    console.error("Cloudinary upload error:", error);
+    throw new Error(`File upload failed: ${error.message}`);
+  }
+};
+
+const cloudinaryUploadVideo = async (filePath, public_id, folder) => {
+  let uploadResult;
+
+  try {
+    uploadResult = await cloudinary.uploader.upload(filePath, {
+      public_id,
+      folder,
+      resource_type: "video",
+      eager_async: true, // This offloads transformation to background
     });
 
     fs.unlinkSync(filePath);
@@ -52,4 +74,4 @@ const cloudinaryDelete = async (public_id) => {
   }
 };
 
-export { cloudinaryUpload, cloudinaryDelete };
+export { cloudinaryUploadImage, cloudinaryUploadVideo, cloudinaryDelete };
