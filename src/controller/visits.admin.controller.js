@@ -54,13 +54,11 @@ export const createVisit = async (req, res, next) => {
     }
 }
 
-//admin gets all visits count for a client
-export const getAllVisitsCount = async (req, res, next) => {
-
-    const { client } = req.params
+//admin gets all visits count
+export const getAllVisitsCount = async (_, res, next) => {
 
     try {
-        const totalVisits = await Visit.countDocuments({ client });
+        const totalVisits = await Visit.countDocuments();
 
         return res.status(200).json({
             status: true,
@@ -74,13 +72,11 @@ export const getAllVisitsCount = async (req, res, next) => {
     }
 }
 
-//admin gets all pending visits count for a client
-export const getPendingVisitsCount = async (req, res, next) => {
-
-    const { client } = req.params
+//admin gets all pending visits count
+export const getPendingVisitsCount = async (_, res, next) => {
 
     try {
-        const totalVisits = await Visit.countDocuments({ client, status: "pending" })
+        const totalVisits = await Visit.countDocuments({ status: "pending" })
 
         return res.status(200).json({
             status: true,
@@ -94,13 +90,11 @@ export const getPendingVisitsCount = async (req, res, next) => {
     }
 }
 
-//admin gets all confirmed visits count for a client
-export const getConfirmedVisitsCount = async (req, res, next) => {
-
-    const { client } = req.params
+//admin gets all confirmed visits count
+export const getConfirmedVisitsCount = async (_, res, next) => {
 
     try {
-        const totalVisits = await Visit.countDocuments({ client, status: "confirmed" })
+        const totalVisits = await Visit.countDocuments({ status: "confirmed" })
 
         return res.status(200).json({
             status: true,
@@ -109,6 +103,35 @@ export const getConfirmedVisitsCount = async (req, res, next) => {
         });
     }
 
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all in progress visits count today
+export const getInProgressVisitsCount = async (_, res, next) => {
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    try {
+        const todayVisits = await Visit.countDocuments({
+            date: {
+                $gte: startOfDay,
+                $lte: endOfDay
+            },
+            status: "confirmed"
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Total in progress visits count fetched successfully",
+            total: todayVisits
+        });
+    }
     catch (error) {
         next(error)
     }
