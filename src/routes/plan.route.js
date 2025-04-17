@@ -3,7 +3,8 @@ import {
     getAllPlans,
     addPlan,
     updatePlan,
-    deletePlan
+    deletePlan,
+    addAddsOnService
 } from "../controller/plan.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin, isClient } from "../middleware/role.middleware.js";
