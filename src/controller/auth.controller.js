@@ -129,15 +129,15 @@ export const verifyRegistration = async (req, res, next) => {
     }
 };
 
-// Login with 2-step verification
+// Login
 export const login = async (req, res, next) => {
     try {
-        const { fullname, email, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!fullname || !email || !password) {
+        if (!email || !password) {
             return res.status(400).json({
                 status: false,
-                message: "All information are required."
+                message: "Email and password are required."
             });
         }
 
@@ -156,57 +156,6 @@ export const login = async (req, res, next) => {
             });
         }
 
-        // Generate and send verification code
-        const verificationCode = await user.generateVerificationCode();
-        await user.save();
-
-        // Send verification email
-        const message = `Your login verification code is: ${verificationCode}\nThis code will expire in 10 minutes.`;
-        await sendEmail({
-            email: user.email,
-            subject: "Login Verification Code",
-            message
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: "Verification code sent to your email. Please verify to login.",
-            data: {
-                email: user.email
-            },
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Verify login code
-export const verifyLogin = async (req, res, next) => {
-    try {
-        const { code } = req.body;
-
-        if (!code) {
-            return res.status(400).json({
-                status: false,
-                message: "Verification code is required."
-            });
-        }
-
-        const user = await User.findOne({ verificationCode: crypto.createHash("sha256").update(code).digest("hex") });
-        if (!user) {
-            return res.status(404).json({
-                status: false,
-                message: "Invalid or expired verification code."
-            });
-        }
-
-        if (user.verificationCodeExpires < Date.now()) {
-            return res.status(400).json({
-                status: false,
-                message: "Verification code has expired."
-            });
-        }
-
         // Update session on login
         const now = Date.now();
         user.sessions.push({
@@ -216,10 +165,6 @@ export const verifyLogin = async (req, res, next) => {
 
         user.lastActive = now;
         user.status = "active";
-
-        // Clear verification code
-        user.verificationCode = undefined;
-        user.verificationCodeExpires = undefined;
         await user.save();
 
         // Generate tokens
@@ -233,11 +178,7 @@ export const verifyLogin = async (req, res, next) => {
             message: "Logged in successfully.",
             data: {
                 refreshToken,
-                user: {
-                    _id: user._id,
-                    fullname: user.fullname,
-                    email: user.email
-                }
+                user,
             },
             token: accessToken
         });
