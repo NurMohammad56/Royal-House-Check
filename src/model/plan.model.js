@@ -1,43 +1,47 @@
 import mongoose, { Schema } from "mongoose";
 
 const planSchema = new Schema({
+
+    clientId: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+
     name: {
         type: String,
         required: true,
-        unique: true,
-        trim: true,
+        trim: true
     },
-    monthlyPrice: {
+
+    price: {
         type: Number,
-        required: true,
-        get: price => `$${price.toFixed(2)}`, 
-        set: price => parseFloat(price.replace(/[^0-9.]/g, '')) 
+        required: true
     },
-    yearlyPrice: {
-        type: Number,
-        required: true,
-        get: price => `$${price.toFixed(2)}`,
-        set: price => parseFloat(price.replace(/[^0-9.]/g, ''))
-    },
-    features: {
-        type: [String],
-        required: true,
-    },
-    isActive: {
-        type: Boolean,
-        default: true,
-    },
-    createdAt: {
+
+    startDate: {
         type: Date,
-        default: Date.now,
-    }
-}, {
-    toJSON: {
-        getters: true 
     },
-    toObject: {
-        getters: true 
-    }
-});
+
+    endDate: {
+        type: Date,
+    },
+
+    addOnServices: [{
+        addOn: {
+            type: String
+        },
+        price: {
+            type: Number
+        },
+        startDate: {
+            type: Date,
+        },
+        endDate: {
+            type: Date,
+        }
+    }]
+
+}, { timestamps: true });
 
 export const Plan = mongoose.model("Plan", planSchema);
