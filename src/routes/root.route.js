@@ -7,6 +7,7 @@ import visitStaffRouter from "./visits.staff.route.js"
 import issuesRouter from "./issues.route.js"
 import notificationRouter from "./notification.route.js"
 import planRouter from "./plan.route.js"
+import addsOnServiceRouter from "./addsOnService.route.js"
 import discountRouter from "./discount.route.js"
 import paymentRouter from "./payment.route.js"
 import webhookRouter from "./webhook.route.js";
@@ -22,6 +23,7 @@ export const rootRouter = (app) => {
     app.use('/api/v1/visits/issues', issuesRouter)
     app.use('/api/v1/notifications', notificationRouter)
     app.use('/api/v1/plans', planRouter)
+    app.use('/api/v1/addsOnService', addsOnServiceRouter)
     app.use('/api/v1/discounts', discountRouter)
     app.use('/api/v1/payments', paymentRouter)
     app.use('/api/v1/admin', adminMatricsRouter)

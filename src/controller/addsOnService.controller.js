@@ -2,11 +2,12 @@ import { AddsOnService } from "../model/addsOnService.model.js";
 import { Plan } from "../model/plan.model.js";
 
 export const addAddsOnService = async (req, res, next) => {
-    const { id } = req.params;
-    const { addOn, price, startDate, endDate } = req.body;
+    const { planId } = req.params;
+    const { addOn, price, endDate } = req.body;
 
     try {
-        const plan = await Plan.findById(id);
+        let addsOnService
+        const plan = await Plan.findById(planId);
         if (!plan) {
             return res.status(404).json({
                 status: false,
@@ -14,15 +15,36 @@ export const addAddsOnService = async (req, res, next) => {
             });
         }
 
-        const addsOnService = await AddsOnService.create({
-            addOn,
-            price,
-            startDate,
-            endDate
-        });
+        // for weekly or monthly services
+        if (endDate) {
+
+            if (new Date().getTime() >= new Date(endDate).getTime()) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Start date cannot be greater than or equal to end date"
+                });
+            }
+
+            addsOnService = await AddsOnService.create({
+                addOn,
+                price,
+                startDate: new Date(),
+                endDate,
+                planId
+            });
+        }
+
+        // for per visits services
+        else {
+            addsOnService = await AddsOnService.create({
+                addOn,
+                price,
+                planId
+            });
+        }
 
         plan.addsOnServices.push(addsOnService._id);
-        await plan.save();
+        await plan.save()
 
         return res.status(201).json({
             status: true,

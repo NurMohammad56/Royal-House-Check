@@ -21,16 +21,23 @@ const planSchema = new Schema({
 
     startDate: {
         type: Date,
+        default: null
     },
 
     endDate: {
         type: Date,
+        default: null
     },
 
     addsOnServices: [{
         type: Schema.Types.ObjectId,
         ref: "AddsOnService"
-    }]
+    }],
+
+    isDeactivated: {
+        type: Boolean,
+        default: false
+    }
 
 }, { timestamps: true });
 
