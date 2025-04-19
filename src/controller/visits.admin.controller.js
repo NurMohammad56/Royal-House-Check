@@ -5,17 +5,17 @@ import mongoose from "mongoose";
 
 //admin creates a visit for a client
 export const createVisit = async (req, res, next) => {
-    const { client, staff, type, address, date } = req.body
+    const { client, staff, type, address, date, plan, addsOnService } = req.body
 
     try {
-        if (!client || !staff || !address || !date || !type) {
+        if (!client || !staff || !address || !date || !type || !plan) {
             return res.status(400).json({
                 status: false,
                 message: "Please provide all required fields"
             })
         }
 
-        await createVisitService({ client, staff, type, address, date }, client, res)
+        await createVisitService({ client, staff, type, address, date, plan, addsOnService }, client, res)
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
             weekday: "short",
@@ -223,10 +223,10 @@ export const getUpcomingVisits = async (req, res, next) => {
 //admin updates a specific visit for a client
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
-    const { client, staff, address, date, type, notes } = req.body
+    const { client, staff, address, date, type, notes, plan, addsOnService } = req.body
 
     try {
-        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed" }, id, client, res)
+        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed", plan, addsOnService }, id, client, res)
 
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",
