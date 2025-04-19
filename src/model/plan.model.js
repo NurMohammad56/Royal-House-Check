@@ -27,19 +27,9 @@ const planSchema = new Schema({
         type: Date,
     },
 
-    addOnServices: [{
-        addOn: {
-            type: String
-        },
-        price: {
-            type: Number
-        },
-        startDate: {
-            type: Date,
-        },
-        endDate: {
-            type: Date,
-        }
+    addsOnServices: [{
+        type: Schema.Types.ObjectId,
+        ref: "AddsOnService"
     }]
 
 }, { timestamps: true });

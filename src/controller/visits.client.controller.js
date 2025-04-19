@@ -1,10 +1,9 @@
-import mongoose from "mongoose"
 import { Visit } from "../model/visit.model.js"
 import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
-    const { address, date, type } = req.body
+    const { address, date, type, plan, addsOnService } = req.body
     const client = req.user._id
 
     try {
@@ -15,7 +14,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        await createVisitService({ address, date, type }, client, res)
+        await createVisitService({ address, date, type, plan, addsOnService }, client, res)
 
         return res.status(201).json({
             status: true,
@@ -133,11 +132,11 @@ export const getNextVisit = async (req, res, next) => {
 
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
-    const { address, date, type } = req.body
+    const { address, date, type, plan, addsOnService } = req.body
     const client = req.user._id
 
     try {
-        const updatedVisit = await updateVisitService({ address, date, type }, id, client, res)
+        const updatedVisit = await updateVisitService({ address, date, type, plan, addsOnService }, id, client, res)
 
         return res.status(200).json({
             status: true,

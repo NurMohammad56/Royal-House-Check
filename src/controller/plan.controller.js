@@ -7,11 +7,12 @@ export const addPlan = async (req, res, next) => {
     try {
         let plan
 
+        //for weekly or monthly plan
         if (startDate && endDate) {
             if (new Date(startDate).getTime() >= new Date(endDate).getTime()) {
                 return res.status(400).json({
                     status: false,
-                    message: "Start date cannot be greater than or equal to end date",
+                    message: "Start date cannot be greater than or equal to end date"
                 });
             }
 
@@ -24,6 +25,7 @@ export const addPlan = async (req, res, next) => {
             });
         }
 
+        //for per visit plan
         else {
             plan = await Plan.create({
                 clientId,
@@ -85,13 +87,12 @@ export const updatePlan = async (req, res, next) => {
     }
 };
 
-export const addAddsOnService = async (req, res, next) => {
+export const getAPlan = async (req, res, next) => {
 
     const { id } = req.params;
-    const { addOn, price, startDate, endDate } = req.body;
 
     try {
-        const plan = await Plan.findById(id);
+        const plan = await Plan.findById(id).populate("addsOnServices");
 
         if (!plan) {
             return res.status(404).json({
@@ -100,21 +101,9 @@ export const addAddsOnService = async (req, res, next) => {
             });
         }
 
-        if (startDate && endDate) {
-            if (new Date(startDate).getTime() >= new Date(endDate).getTime()) {
-                return res.status(400).json({
-                    status: false,
-                    message: "Start date cannot be greater than or equal to end date",
-                });
-            }
-        }
-
-        plan.push({ addOn, price, startDate, endDate });
-        await plan.save();
-
         return res.status(200).json({
             status: true,
-            message: "Add-on service added successfully",
+            message: "Plan fetched successfully",
             data: plan
         });
     }
