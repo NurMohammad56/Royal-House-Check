@@ -4,7 +4,6 @@ import { Notification } from "../model/notfication.model.js";
 import { User } from "../model/user.model.js";
 import { stripeService } from "../services/stripe.service.js"
 
-
 export const createVisitPayment = async (req, res, next) => {
     try {
         const { visitId, paymentMethod = "stripe" } = req.body;
@@ -93,13 +92,14 @@ export const createMonthlyOrWeeklyPayment = async (req, res, next) => {
         }
 
         //validate amount
-        if (amount) {
+        if (!amount) {
             return res.status(400).json({
                 status: false,
                 message: "Amount missing!!"
             });
         }
 
+        //create payment
         const paymentRecord = await Payment.create({
             user: userId,
             amount,
@@ -126,11 +126,11 @@ export const createMonthlyOrWeeklyPayment = async (req, res, next) => {
             message: "Payment initiated",
             data: {
                 paymentId: paymentRecord._id,
-                amount: visit.amount,
+                amount,
                 currency: "USD",
-                clientSecret,
+                clientSecret
             },
-        });
+        })
     }
 
     catch (error) {
