@@ -8,8 +8,7 @@ const paymentSchema = new Schema({
     },
     visit: {
         type: Schema.Types.ObjectId,
-        ref: "Visit",
-        required: true,
+        ref: "Visit"
     },
     amount: {
         type: Number,

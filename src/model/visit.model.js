@@ -81,8 +81,16 @@ const visitSchema = new Schema({
         type: Boolean,
         default: false
     },
-}, { timestamps: true });
-
-
+    plan: {
+        type: Schema.Types.ObjectId,
+        ref: 'Plan',
+        required: true
+    },
+    addsOnService: {
+        type: Schema.Types.ObjectId,
+        ref: 'AddsOnService'
+    }
+    
+}, { timestamps: true })
 
 export const Visit = mongoose.model("Visit", visitSchema);
