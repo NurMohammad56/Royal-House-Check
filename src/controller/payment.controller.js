@@ -70,10 +70,73 @@ export const createVisitPayment = async (req, res, next) => {
                 clientSecret,
             },
         });
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
+
+export const createMonthlyOrWeeklyPayment = async (req, res, next) => {
+
+    const userId = req.user?._id;
+    const { amount, paymentMethod = "stripe" } = req.body;
+
+    try {
+
+        // Validate payment method
+        if (paymentMethod !== "stripe") {
+            return res.status(400).json({
+                status: false,
+                message: "Unsupported payment method"
+            });
+        }
+
+        //validate amount
+        if (amount) {
+            return res.status(400).json({
+                status: false,
+                message: "Amount missing!!"
+            });
+        }
+
+        const paymentRecord = await Payment.create({
+            user: userId,
+            amount,
+            paymentMethod
+        });
+
+        // Create Stripe payment intent
+        const { clientSecret, paymentIntentId } = await stripeService.createPaymentIntent(
+            amount,
+            "usd",
+            {
+                userId: userId.toString(),
+                paymentId: paymentRecord._id.toString(),
+            }
+        );
+
+        // Update payment with Stripe reference
+        await Payment.findByIdAndUpdate(paymentRecord._id, {
+            transactionId: paymentIntentId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Payment initiated",
+            data: {
+                paymentId: paymentRecord._id,
+                amount: visit.amount,
+                currency: "USD",
+                clientSecret,
+            },
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
 
 export const confirmPayment = async (req, res, next) => {
     try {
