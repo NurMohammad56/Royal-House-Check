@@ -27,7 +27,6 @@ const visitSchema = new Schema({
     },
     amount: {
         type: Number,
-        required: true,
         get: v => parseFloat(v.toFixed(2))
     },
     status: {
@@ -90,7 +89,7 @@ const visitSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'AddsOnService'
     }
-    
+
 }, { timestamps: true })
 
 export const Visit = mongoose.model("Visit", visitSchema);
