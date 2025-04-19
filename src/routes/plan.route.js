@@ -3,8 +3,9 @@ import {
     getAllPlans,
     addPlan,
     updatePlan,
-    deletePlan,
-    getAPlan
+    getAPlan,
+    deactivatePlan,
+    activatePlan
 } from "../controller/plan.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin, isClient } from "../middleware/role.middleware.js";
@@ -15,6 +16,7 @@ router.post("/add-plan", verifyJWT, isClient, addPlan);
 router.get("/get-all-plans", verifyJWT, isAdmin, getAllPlans);
 router.get("/get-a-plan/:id", verifyJWT, isClient, getAPlan);
 router.patch("/update-plan/:id", verifyJWT, isClient, updatePlan);
-router.delete("/delete-plan/:id", verifyJWT, isClient, deletePlan);
+router.patch("/deactivate-plan/:id", verifyJWT, deactivatePlan);
+router.patch("/activate-plan/:id", verifyJWT, activatePlan);
 
 export default router;
