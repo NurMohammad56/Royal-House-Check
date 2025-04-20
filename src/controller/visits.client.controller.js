@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js"
-import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, updateVisitService } from "../services/visit.services.js"
+import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
@@ -94,6 +94,45 @@ export const getUpcomingVisits = async (req, res, next) => {
 
     try {
         await getUpcomingVisitsService(page, limit, client, res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getRoutineCheckVisits = async (req, res, next) => {
+
+    const client = req.user._id
+
+    try {
+        await getVisitsByType(client, "routine check", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getEmergencyVisits = async (req, res, next) => {
+
+    const client = req.user._id
+
+    try {
+        await getVisitsByType(client, "emergency", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getFollowUpVisits = async (req, res, next) => {
+
+    const client = req.user._id
+
+    try {
+        await getVisitsByType(client, "follow up", res)
     }
 
     catch (error) {
