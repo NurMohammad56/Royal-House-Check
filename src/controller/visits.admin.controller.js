@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 //admin creates a visit for a client
@@ -213,6 +213,48 @@ export const getUpcomingVisits = async (req, res, next) => {
 
     try {
         await getUpcomingVisitsService(page, limit, client, res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all routine check visits for a client
+export const getRoutineCheckVisits = async (req, res, next) => {
+
+    const {client} = req.params
+
+    try {
+        await getVisitsByType(client, "routine check", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all emergency visits for a client
+export const getEmergencyVisits = async (req, res, next) => {
+
+    const {client} = req.params
+
+    try {
+        await getVisitsByType(client, "emergency", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+//admin gets all follow up visits for a client
+export const getFollowUpVisits = async (req, res, next) => {
+
+    const {client} = req.params
+
+    try {
+        await getVisitsByType(client, "follow up", res)
     }
 
     catch (error) {

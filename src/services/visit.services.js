@@ -47,14 +47,26 @@ export const createVisitService = async (body, client, res) => {
     return
 }
 
-//gets a specific visit
+//get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).select("-createdAt -updatedAt -__v").sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
         message: `${status} visits fetched successfully`,
+        data: visits
+    })
+}
+
+//get visits by type
+export const getVisitsByType = async (client, type, res) => {
+
+    const visits = await Visit.find({ client, type }).sort({ date: 1 }).lean()
+
+    return res.status(200).json({
+        status: true,
+        message: `${type} visits fetched successfully`,
         data: visits
     })
 }

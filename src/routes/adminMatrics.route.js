@@ -11,7 +11,7 @@ import {
     getRecentUserActivityController,
     getInActiveUsersController
 } from "../controller/adminMatrics.controller.js";
-import {getAllUsers, getUserByRole, getUserByStatus, addUser, updateUser, deleteUser} from '../controller/manageUser.controller.js'
+import { getAllUsers, addUser, updateUser, deleteUser, getUserByRoleStatus } from '../controller/manageUser.controller.js'
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js"
@@ -32,12 +32,9 @@ router.get("/metrics/recent-user-activity/:userId", verifyJWT, isAdmin, getRecen
 
 // User managements
 router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
-router.get("/user-by-role/:role", verifyJWT, isAdmin, getUserByRole);
-router.get("/user-by-status/:status", verifyJWT, isAdmin, getUserByStatus);
+router.get("/user-by-role-status/:role/:status", verifyJWT, isAdmin, getUserByRoleStatus);
 router.post("/add-user", verifyJWT, isAdmin, addUser)
 router.put("/update-user/:id", verifyJWT, isAdmin, updateUser);
 router.delete("/delete-user/:id", verifyJWT, isAdmin, deleteUser);
-
-
 
 export default router;

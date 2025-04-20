@@ -15,11 +15,11 @@ export const getAllUsers = async (_, res, next) => {
   }
 };
 
-// Get user by role (Admin functionality)
-export const getUserByRole = async (req, res, next) => {
-  const { role } = req.params;
+// Get user by role and status (Admin functionality)
+export const getUserByRoleStatus = async (req, res, next) => {
+  const { role, status } = req.params;
   try {
-    const users = await User.find({ role }, "id fullname email role status lastActive");
+    const users = await User.find({ role, status }, "id fullname email role status lastActive");
     return res.status(200).json({
       status: true,
       message: `Fetched ${role} users`,
@@ -27,22 +27,6 @@ export const getUserByRole = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching users by role:", error);
-    next(error);
-  }
-};
-
-// Get user by status
-export const getUserByStatus = async (req, res, next) => {
-  const { status } = req.params;
-  try {
-    const users = await User.find({ status }, "id fullname email role status lastActive");
-    return res.status(200).json({
-      status: true,
-      message: `Fetched ${status} users`,
-      data: users,
-    });
-  } catch (error) {
-    console.error("Error fetching users by status:", error);
     next(error);
   }
 };
