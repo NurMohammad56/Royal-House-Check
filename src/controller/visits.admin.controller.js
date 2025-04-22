@@ -268,7 +268,7 @@ export const updateVisit = async (req, res, next) => {
     const { client, staff, address, date, type, notes, plan, addsOnService } = req.body
 
     try {
-        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed", plan, addsOnService }, id, client, res)
+        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed", plan, addsOnService }, id, client, res).populate("client")
 
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",

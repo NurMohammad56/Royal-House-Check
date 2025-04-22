@@ -50,7 +50,7 @@ export const createVisitService = async (body, client, res) => {
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).populate("client").sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -62,7 +62,7 @@ export const getVisits = async (client, status, res) => {
 //get visits by type
 export const getVisitsByType = async (client, type, res) => {
 
-    const visits = await Visit.find({ client, type }).sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, type }).populate("client").sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -77,6 +77,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
         client,
         date: { $lt: new Date() }
     })
+        .populate("client")
         .sort({ date: -1 }) // most recent first
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -90,8 +91,12 @@ export const getPastVisitsService = async (page, limit, client, res) => {
         status: true,
         message: "Past visits fetched successfully",
         data: visits,
-        totalPages: Math.ceil(total / limit),
-        currentPage: Number(page)
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
     });
 }
 
@@ -101,6 +106,7 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
         client,
         date: { $gte: new Date() }
     })
+        .populate("client")
         .sort({ date: 1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -114,8 +120,12 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
         status: true,
         message: "Upcoming visits fetched successfully",
         data: visits,
-        totalPages: Math.ceil(total / limit),
-        currentPage: Number(page)
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
     });
 }
 
