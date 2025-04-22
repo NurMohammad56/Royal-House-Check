@@ -91,8 +91,12 @@ export const getPastVisitsService = async (page, limit, client, res) => {
         status: true,
         message: "Past visits fetched successfully",
         data: visits,
-        totalPages: Math.ceil(total / limit),
-        currentPage: Number(page)
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
     });
 }
 
@@ -116,8 +120,12 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
         status: true,
         message: "Upcoming visits fetched successfully",
         data: visits,
-        totalPages: Math.ceil(total / limit),
-        currentPage: Number(page)
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
     });
 }
 
