@@ -116,6 +116,35 @@ export const getVisitsPagination = async (page, limit, client, status, res) => {
     })
 }
 
+export const getCompletedVisitsWithIssuesService = async (page, limit, client, res) => {
+
+    const query = {
+        client,
+        status: "completed",
+        issues: { $ne: [] } // only visits where issues array is not empty
+    };
+
+    const visits = await Visit.find(query)
+        .populate("client staff")
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit))
+        .lean()
+
+    const total = await Visit.countDocuments(query);
+
+    return res.status(200).json({
+        status: true,
+        data: visits,
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
+    })
+}
+
 //get visits by type
 export const getVisitsByType = async (client, type, res) => {
 

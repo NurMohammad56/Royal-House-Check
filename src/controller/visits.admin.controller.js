@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getAllVisitsService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 //admin creates a visit for a client
@@ -203,6 +203,21 @@ export const getCompletedVisitsPagination = async (req, res, next) => {
 
     try {
         await getVisitsPagination(page, limit, client, "completed", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getCompletedVisitsWithIssues = async (req, res, next) => {
+
+    const { client } = req.params
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+
+    try {
+        await getCompletedVisitsWithIssuesService(page, limit, client, res)
     }
 
     catch (error) {

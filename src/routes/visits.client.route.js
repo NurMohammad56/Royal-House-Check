@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createVisit, getCancelledVisits, getConfirmedVisits, getAllVisits, getPendingVisits, getCompletedVisits, updateVisit, getNextVisit, getPastVisits, getUpcomingVisits, getRoutineCheckVisits, getEmergencyVisits, getFollowUpVisits, getCompletedVisitsPagination } from "../controller/visits.client.controller.js";
+import { createVisit, getCancelledVisits, getConfirmedVisits, getAllVisits, getPendingVisits, getCompletedVisits, updateVisit, getNextVisit, getPastVisits, getUpcomingVisits, getRoutineCheckVisits, getEmergencyVisits, getFollowUpVisits, getCompletedVisitsPagination, getCompletedVisitsWithIssues } from "../controller/visits.client.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isClient } from "../middleware/role.middleware.js";
 import { updateUserActivity } from "../middleware/updateUserActivity.middleware.js";
@@ -18,6 +18,8 @@ router.get('/get-pending-visits', verifyJWT, isClient, updateUserActivity, getPe
 router.get('/get-completed-visits', verifyJWT, isClient, updateUserActivity, getCompletedVisits);
 
 router.get('/get-completed-visits-pagination', verifyJWT, isClient, updateUserActivity, getCompletedVisitsPagination);
+
+router.get('/get-completed-visits-with-issues', verifyJWT, isClient, updateUserActivity, getCompletedVisitsWithIssues);
 
 router.get('/get-cancelled-visits', verifyJWT, isClient, updateUserActivity, getCancelledVisits)
 
