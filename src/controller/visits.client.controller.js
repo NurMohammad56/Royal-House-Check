@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js"
-import { createVisitService, getAllVisitsService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, updateVisitService } from "../services/visit.services.js"
+import { createVisitService, getAllVisitsService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
@@ -71,6 +71,21 @@ export const getCompletedVisits = async (req, res, next) => {
     const client = req.user._id
     try {
         await getVisits(client, "completed", res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
+export const getCompletedVisitsPagination = async (req, res, next) => {
+
+    const client = req.user._id
+    const page = req.query.page || 1
+    const limit = req.query.limit || 10
+
+    try {
+        await getVisitsPagination(page, limit, client, "completed", res)
     }
 
     catch (error) {
