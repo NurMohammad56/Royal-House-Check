@@ -176,7 +176,7 @@ export const getNextVisit = async (req, res, next) => {
     try {
         const visit =
             (await Visit.findOne({ client, date: { $gte: new Date() } })
-                .populate("client")
+                .populate("client staff")
                 .sort({ date: 1 })
                 .select("-createdAt -updatedAt -__v")
                 .lean())
@@ -206,7 +206,7 @@ export const updateVisit = async (req, res, next) => {
     const client = req.user._id
 
     try {
-        const updatedVisit = await updateVisitService({ address, date, type, plan, addsOnService }, id, client, res).populate("client")
+        const updatedVisit = await updateVisitService({ address, date, type, plan, addsOnService }, id, client, res).populate("client staff")
 
         return res.status(200).json({
             status: true,
