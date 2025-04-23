@@ -129,6 +129,58 @@ export const verifyRegistration = async (req, res, next) => {
     }
 };
 
+// Resend verification code
+export const resendVerificationCode = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                status: false,
+                message: "Email is required."
+            });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found."
+            });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({
+                status: false,
+                message: "User is already verified."
+            });
+        }
+
+        // Generate and hash new verification code
+        const verificationCode = user.generateVerificationCode();
+        const hashedCode = crypto.createHash("sha256").update(verificationCode).digest("hex");
+
+        user.verificationCode = hashedCode;
+        user.verificationCodeExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const message = `Your verification code is: ${verificationCode}\nThis code will expire in 10 minutes.`;
+        await sendEmail({
+            email: user.email,
+            subject: "Verify Your Account",
+            message
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Verification code sent to your email. Please verify to complete registration."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 // Login
 export const login = async (req, res, next) => {
     try {
