@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getAllVisitsService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 //admin creates a visit for a client
@@ -137,6 +137,22 @@ export const getInProgressVisitsCount = async (_, res, next) => {
     }
 }
 
+//admin will gte all visits of a client
+export const getAllVisits = async (req, res, next) => {
+
+    const { client } = req.params
+    const page = req.query.page || 1
+    const limit = req.query.limit || 10
+
+    try {
+        await getAllVisitsService(page, limit, client, res)
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
 //admin gets all confirmed visits for a client
 export const getConfirmedVisits = async (req, res, next) => {
 
@@ -223,7 +239,7 @@ export const getUpcomingVisits = async (req, res, next) => {
 //admin gets all routine check visits for a client
 export const getRoutineCheckVisits = async (req, res, next) => {
 
-    const {client} = req.params
+    const { client } = req.params
 
     try {
         await getVisitsByType(client, "routine check", res)
@@ -237,7 +253,7 @@ export const getRoutineCheckVisits = async (req, res, next) => {
 //admin gets all emergency visits for a client
 export const getEmergencyVisits = async (req, res, next) => {
 
-    const {client} = req.params
+    const { client } = req.params
 
     try {
         await getVisitsByType(client, "emergency", res)
@@ -251,7 +267,7 @@ export const getEmergencyVisits = async (req, res, next) => {
 //admin gets all follow up visits for a client
 export const getFollowUpVisits = async (req, res, next) => {
 
-    const {client} = req.params
+    const { client } = req.params
 
     try {
         await getVisitsByType(client, "follow up", res)
