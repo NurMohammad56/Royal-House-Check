@@ -146,14 +146,32 @@ export const getCompletedVisitsWithIssuesService = async (page, limit, client, r
 }
 
 //get visits by type
-export const getVisitsByType = async (client, type, res) => {
+export const getVisitsByType = async (page, limit, client, type, res) => {
 
-    const visits = await Visit.find({ client, type }).populate("client staff").sort({ date: 1 }).lean()
+    const visits = await Visit.find({
+        client, type
+    })
+        .populate("client staff")
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit))
+        .lean()
+
+    const total = await Visit.countDocuments({
+        client,
+        type
+    });
 
     return res.status(200).json({
         status: true,
         message: `${type} visits fetched successfully`,
-        data: visits
+        data: visits,
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
     })
 }
 

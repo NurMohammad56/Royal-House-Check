@@ -272,9 +272,11 @@ export const getUpcomingVisits = async (req, res, next) => {
 export const getRoutineCheckVisits = async (req, res, next) => {
 
     const { client } = req.params
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
-        await getVisitsByType(client, "routine check", res)
+        await getVisitsByType(page, limit, client, "routine check", res)
     }
 
     catch (error) {
@@ -286,9 +288,11 @@ export const getRoutineCheckVisits = async (req, res, next) => {
 export const getEmergencyVisits = async (req, res, next) => {
 
     const { client } = req.params
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
-        await getVisitsByType(client, "emergency", res)
+        await getVisitsByType(page, limit, client, "emergency", res)
     }
 
     catch (error) {
@@ -300,9 +304,11 @@ export const getEmergencyVisits = async (req, res, next) => {
 export const getFollowUpVisits = async (req, res, next) => {
 
     const { client } = req.params
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
-        await getVisitsByType(client, "follow up", res)
+        await getVisitsByType(page, limit, client, "follow up", res)
     }
 
     catch (error) {
