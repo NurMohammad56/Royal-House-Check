@@ -47,6 +47,34 @@ export const createVisitService = async (body, client, res) => {
     return
 }
 
+export const getAllVisitsService = async (page, limit, client, res) => {
+
+    const visits = await Visit.find({
+        client
+    })
+        .populate("client")
+        .sort({ date: 1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit))
+        .lean()
+
+    const total = await Visit.countDocuments({
+        client
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "All visits fetched successfully",
+        data: visits,
+        pagination: {
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            itemsPerPage: Number(limit)
+        }
+    })
+}
+
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
