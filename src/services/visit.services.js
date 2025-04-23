@@ -52,7 +52,7 @@ export const getAllVisitsService = async (page, limit, client, res) => {
     const visits = await Visit.find({
         client
     })
-        .populate("client")
+        .populate("client staff")
         .sort({ date: 1 })
         .skip((page - 1) * limit)
         .limit(Number(limit))
@@ -78,7 +78,7 @@ export const getAllVisitsService = async (page, limit, client, res) => {
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).populate("client").sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).populate("client staff").sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -119,7 +119,7 @@ export const getVisitsPagination = async (page, limit, client, status, res) => {
 //get visits by type
 export const getVisitsByType = async (client, type, res) => {
 
-    const visits = await Visit.find({ client, type }).populate("client").sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, type }).populate("client staff").sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -134,7 +134,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
         client,
         date: { $lt: new Date() }
     })
-        .populate("client")
+        .populate("client staff")
         .sort({ date: -1 }) // most recent first
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -163,7 +163,7 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
         client,
         date: { $gte: new Date() }
     })
-        .populate("client")
+        .populate("client staff")
         .sort({ date: 1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -198,7 +198,7 @@ export const updateVisitService = async (body, id, client, res) => {
         })
     }
 
-    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status").lean()
+    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status")
 
     //checking if the visit id is valid or not
     if (!visit) {
@@ -220,7 +220,7 @@ export const updateVisitService = async (body, id, client, res) => {
         date,
         client,
         status: { $in: ["pending", "confirmed"] }
-    }).lean()
+    })
 
     // checking if the visit date is already taken by another visit
     if (existingVisit && existingVisit._id.toString() !== id) {
@@ -230,7 +230,7 @@ export const updateVisitService = async (body, id, client, res) => {
         });
     }
 
-    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true }).select("-createdAt -updatedAt -__v").lean()
+    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true }).select("-createdAt -updatedAt -__v")
 
     return updatedVisit
 }
