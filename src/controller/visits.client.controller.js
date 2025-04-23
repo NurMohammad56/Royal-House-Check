@@ -30,8 +30,8 @@ export const createVisit = async (req, res, next) => {
 export const getAllVisits = async (req, res, next) => {
 
     const client = req.user._id
-    const page = req.query.page || 1
-    const limit = req.query.limit || 10
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
         await getAllVisitsService(page, limit, client, res)
@@ -81,8 +81,8 @@ export const getCompletedVisits = async (req, res, next) => {
 export const getCompletedVisitsPagination = async (req, res, next) => {
 
     const client = req.user._id
-    const page = req.query.page || 1
-    const limit = req.query.limit || 10
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
         await getVisitsPagination(page, limit, client, "completed", res)
@@ -121,8 +121,9 @@ export const getCancelledVisits = async (req, res, next) => {
 }
 
 export const getPastVisits = async (req, res, next) => {
-    const { page = 1, limit = 10 } = req.query;
     const client = req.user._id
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
         await getPastVisitsService(page, limit, client, res)
@@ -134,8 +135,9 @@ export const getPastVisits = async (req, res, next) => {
 }
 
 export const getUpcomingVisits = async (req, res, next) => {
-    const { page = 1, limit = 10 } = req.query;
     const client = req.user._id
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
 
     try {
         await getUpcomingVisitsService(page, limit, client, res)
