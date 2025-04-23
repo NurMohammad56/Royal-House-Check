@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createVisit, getAllVisitsCount, getCancelledVisits, getAllVisits, getCompletedVisits, getConfirmedVisits, getConfirmedVisitsCount, getEmergencyVisits, getFollowUpVisits, getInProgressVisitsCount, getPastVisits, getPendingVisits, getPendingVisitsCount, getRoutineCheckVisits, getUpcomingVisits, updateVisit, updateVisitStaff } from "../controller/visits.admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
+import { getCompletedVisitsPagination } from "../controller/visits.admin.controller.js";
 
 const router = Router();
 
@@ -22,6 +23,8 @@ router.get('/get-confirmed-visits/:client', verifyJWT, isAdmin, getConfirmedVisi
 router.get('/get-pending-visits/:client', verifyJWT, isAdmin, getPendingVisits);
 
 router.get('/get-completed-visits/:client', verifyJWT, isAdmin, getCompletedVisits);
+
+router.get('/get-completed-visits-pagination/:client', verifyJWT, isAdmin, getCompletedVisitsPagination);
 
 router.get('/get-cancelled-visits/:client', verifyJWT, isAdmin, getCancelledVisits)
 
