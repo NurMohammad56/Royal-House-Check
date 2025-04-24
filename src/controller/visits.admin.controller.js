@@ -201,21 +201,6 @@ export const getAdminAllVisit = async (req, res, next) => {
     }
 };
 
-//admin will gte all visits of a client
-export const getAllVisits = async (req, res, next) => {
-
-    const { client } = req.params
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getAllVisitsService(page, limit, client, res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
 
 //admin gets all confirmed visits for a client
 export const getConfirmedVisits = async (req, res, next) => {
