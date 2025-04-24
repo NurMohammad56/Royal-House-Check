@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { createVisit, getAllVisitsCount, getCancelledVisits, getCompletedVisitsPagination, getAllVisits, getCompletedVisits, getConfirmedVisits, getConfirmedVisitsCount, getEmergencyVisits, getFollowUpVisits, getInProgressVisitsCount, getPastVisits, getPendingVisits, getPendingVisitsCount, getRoutineCheckVisits, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues } from "../controller/visits.admin.controller.js";
+import { getAdminAllVisit, createVisit, getAllVisitsCount, getCancelledVisits, getCompletedVisitsPagination, getAllVisits, getCompletedVisits, getConfirmedVisits, getConfirmedVisitsCount, getInProgressVisitsCount, getPendingVisits, getPendingVisitsCount, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues } from "../controller/visits.admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
 
 const router = Router();
+
+router.get("/get-all-visit", getAdminAllVisit);
 
 router.post("/create-visit", verifyJWT, isAdmin, createVisit);
 
@@ -29,18 +31,14 @@ router.get('/get-completed-visits-with-issues/:client', verifyJWT, isAdmin, getC
 
 router.get('/get-cancelled-visits/:client', verifyJWT, isAdmin, getCancelledVisits)
 
-router.get('/get-past-visits/:client', verifyJWT, isAdmin, getPastVisits)
+// router.get('/get-past-visits/:client', verifyJWT, isAdmin, getPastVisits)
+
+// router.get('/get-visits-type/:type', verifyJWT, isAdmin, getVisitsByType)
 
 router.get('/get-upcoming-visits/:client', verifyJWT, isAdmin, getUpcomingVisits)
 
-router.get('/get-routineCheck-visits/:client', verifyJWT, isAdmin, getRoutineCheckVisits)
+router.patch('/update-visit/:id', verifyJWT, isAdmin, updateVisit)
 
-router.get('/get-emergency-visits/:client', verifyJWT, isAdmin, getEmergencyVisits)
-
-router.get('/get-followUp-visits/:client', verifyJWT, isAdmin, getFollowUpVisits)
-
-router.patch('/update-visit/:id', verifyJWT, isAdmin, updateVisit);
-
-router.patch('/update-visit-staff/:id', verifyJWT, isAdmin, updateVisitStaff);
+router.patch('/update-visit-staff/:id', verifyJWT, isAdmin, updateVisitStaff)
 
 export default router;
