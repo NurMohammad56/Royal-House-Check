@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const addsOnServiceSchema = new Schema({
-    addOn: {
+    name: {
         type: String,
         required: true,
     },
@@ -9,13 +9,15 @@ const addsOnServiceSchema = new Schema({
         type: Number,
         required: true,
     },
-    startDate: {
-        type: Date,
-        default: null
+    pack: {
+        type: String,
+        required: true,
+        enum: ["weekly", "monthly", "daily"]
     },
-    endDate: {
-        type: Date,
-        default: null
+    description: {
+        type: String,
+        required: true,
+        trim: true
     },
     planId: {
         type: Schema.Types.ObjectId,
