@@ -14,7 +14,8 @@ const activePlansSchema = new Schema({
             ref: 'Plan'
         },
         isActive: {
-            type: Boolean
+            type: Boolean,
+            default: true
         }
     }],
 
@@ -24,7 +25,8 @@ const activePlansSchema = new Schema({
             ref: 'AddsOnService'
         },
         isActive: {
-            type: Boolean
+            type: Boolean,
+            default: true
         }
     }],
 
