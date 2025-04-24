@@ -79,9 +79,17 @@ export const createVisitPayment = async (req, res, next) => {
 export const createMonthlyOrWeeklyPayment = async (req, res, next) => {
 
     const userId = req.user?._id;
-    const { amount, paymentMethod = "stripe" } = req.body;
+    const { planId, amount, paymentMethod = "stripe" } = req.body;
 
     try {
+
+        // Validate planId
+        if (!planId) {
+            return res.status(400).json({
+                status: false,
+                message: "Plan is required"
+            });
+        }
 
         // Validate payment method
         if (paymentMethod !== "stripe") {
@@ -102,6 +110,7 @@ export const createMonthlyOrWeeklyPayment = async (req, res, next) => {
         //create payment
         const paymentRecord = await Payment.create({
             user: userId,
+            plan: planId,
             amount,
             paymentMethod
         });
@@ -163,13 +172,13 @@ export const confirmPayment = async (req, res, next) => {
 
         if (!payment) {
             return res.status(404).json({
-                status: true,
+                status: false,
                 message: "Payment not found"
             });
         }
 
-        // Update visit status and isPaid field if payment was successful
-        if (success) {
+        // Check if visit exists
+        if (success && payment.visit) {
             await Visit.findByIdAndUpdate(payment.visit._id, {
                 status: 'confirmed',
                 isPaid: true
@@ -271,7 +280,8 @@ export const getUserPayments = async (req, res, next) => {
         const { page = 1, limit = 10 } = req.query;
 
         const payments = await Payment.find({ user: userId })
-            .populate("visit", "visitCode date status")
+            .populate("visit", "visitCode date status") // Populate visit details
+            .populate("plan", "name") // Populate only the name of the plan
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
@@ -281,7 +291,10 @@ export const getUserPayments = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Payments retrieved",
-            data: payments,
+            data: payments.map(payment => ({
+                ...payment.toObject(),
+                formattedAmount: `$${payment.amount.toFixed(2)}`
+            })),
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalPayments / limit),
@@ -297,8 +310,9 @@ export const getPaymentDetails = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
         const payment = await Payment.findById(paymentId)
-            .populate("visit")
-            .populate("user", "name email");
+            .populate("visit") // Populate visit details
+            .populate("plan", "name") // Populate only the name of the plan
+            .populate("user", "name email"); // Populate user details
 
         if (!payment) {
             return res.status(404).json({
@@ -316,7 +330,6 @@ export const getPaymentDetails = async (req, res, next) => {
         next(error);
     }
 };
-
 export const getPaymentById = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
@@ -341,4 +354,4 @@ export const getPaymentById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};  
+};

@@ -18,7 +18,10 @@ const planSchema = new Schema({
         required: true,
         enum: ["weekly", "monthly", "daily"]
     },
-
+    addsOnServices: [{
+        type: Schema.Types.ObjectId,
+        ref: "AddsOnService"
+    }],
     description: {
         type: String,
         required: true,
