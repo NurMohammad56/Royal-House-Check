@@ -1,6 +1,6 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
 
 //admin creates a visit for a client
@@ -15,7 +15,7 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        await createVisitService({ client, staff, type, address, date, plan, addsOnService }, client, res)
+        await createVisitService({ client, staff, type, address, date, status: "confirmed", plan, addsOnService }, client, res)
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
             weekday: "short",
@@ -136,6 +136,70 @@ export const getInProgressVisitsCount = async (_, res, next) => {
         next(error)
     }
 }
+
+export const getAdminAllVisit = async (req, res, next) => {
+
+    const search = req.query.search?.trim().toLowerCase() || "";
+    const status = req.query.status?.trim().toLowerCase() || null;
+    const type = req.query.type?.trim().toLowerCase() || null;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    try {
+        // Fetch all visits with population
+        const allVisits = await Visit.find()
+            .populate("client staff")
+            .populate("plan")
+            .populate("addsOnService");
+
+        // Filter by search and status
+        let filtered = allVisits.filter(v => {
+            const clientName = v.client?.fullname?.toLowerCase() || "";
+            const staffName = v.staff?.fullname?.toLowerCase() || "";
+            const visitType = v.type?.toLowerCase() || "";
+            const visitStatus = v.status?.toLowerCase() || "";
+            const visitCode = v.visitCode?.toLowerCase() || "";
+
+            const matchesSearch = search
+                ? clientName.includes(search) ||
+                staffName.includes(search) ||
+                visitType.includes(search) ||
+                visitStatus.includes(search) ||
+                visitCode.includes(search)
+                : true;
+
+            const matchesStatus = status ? visitStatus === status : true;
+
+            const matchesTypes = type ? visitType === type : true;
+
+            return matchesSearch && matchesStatus && matchesTypes;
+        });
+
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const paginatedVisits = filtered.slice(skip, skip + limit);
+
+        const meta = {
+            currentPage: page,
+            totalPages,
+            totalItems,
+            itemsPerPage: limit
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: paginatedVisits,
+            meta
+        });
+
+    }
+
+    catch (error) {
+        next(error)
+    }
+};
 
 //admin will gte all visits of a client
 export const getAllVisits = async (req, res, next) => {
@@ -268,53 +332,18 @@ export const getUpcomingVisits = async (req, res, next) => {
     }
 }
 
-//admin gets all routine check visits for a client
-export const getRoutineCheckVisits = async (req, res, next) => {
 
-    const { client } = req.params
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
 
-    try {
-        await getVisitsByType(page, limit, client, "routine check", res)
-    }
 
-    catch (error) {
-        next(error)
-    }
-}
 
-//admin gets all emergency visits for a client
-export const getEmergencyVisits = async (req, res, next) => {
+//     try {
 
-    const { client } = req.params
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
+//     }
 
-    try {
-        await getVisitsByType(page, limit, client, "emergency", res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-//admin gets all follow up visits for a client
-export const getFollowUpVisits = async (req, res, next) => {
-
-    const { client } = req.params
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getVisitsByType(page, limit, client, "follow up", res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
+//     catch (error) {
+//         next(error)
+//     }
+// }
 
 //admin updates a specific visit for a client
 export const updateVisit = async (req, res, next) => {

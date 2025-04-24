@@ -1,5 +1,5 @@
 import { Visit } from "../model/visit.model.js"
-import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsByType, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
+import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
@@ -41,6 +41,68 @@ export const getAllVisits = async (req, res, next) => {
         next(error)
     }
 }
+
+export const getAllVisitForSpecificClient = async (req, res, next) => {
+    const client = req.user._id;
+    const search = req.query.search?.trim().toLowerCase() || "";
+    const status = req.query.status?.trim().toLowerCase() || null;
+    const type = req.query.type?.trim().toLowerCase() || null;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    if (!client) {
+        return res.status(400).json({ success: false, message: "clientId is required" });
+    }
+
+    try {
+        const filterQuery = { client };
+
+        if (status) filterQuery.status = new RegExp(`^${status}$`, 'i');
+        if (type) filterQuery.type = new RegExp(`^${type}$`, 'i');
+
+        const visits = await Visit.find(filterQuery)
+            .populate("client staff plan addsOnService");
+
+        const filtered = visits.filter(v => {
+            const clientName = v.client?.fullname?.toLowerCase() || "";
+            const staffName = v.staff?.fullname?.toLowerCase() || "";
+            const visitType = v.type?.toLowerCase() || "";
+            const visitStatus = v.status?.toLowerCase() || "";
+            const visitCode = v.visitCode?.toLowerCase() || "";
+
+            const matchesSearch = search
+                ? clientName.includes(search) ||
+                staffName.includes(search) ||
+                visitType.includes(search) ||
+                visitStatus.includes(search) ||
+                visitCode.includes(search)
+                : true;
+
+            return matchesSearch;
+        });
+
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / limit);
+        const paginatedVisits = filtered.slice(skip, skip + limit);
+
+        const meta = {
+            currentPage: page,
+            totalPages,
+            totalItems,
+            itemsPerPage: limit
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: paginatedVisits,
+            meta
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
 
 export const getConfirmedVisits = async (req, res, next) => {
 
@@ -141,51 +203,6 @@ export const getUpcomingVisits = async (req, res, next) => {
 
     try {
         await getUpcomingVisitsService(page, limit, client, res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const getRoutineCheckVisits = async (req, res, next) => {
-
-    const client = req.user._id
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getVisitsByType(page, limit, client, "routine check", res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const getEmergencyVisits = async (req, res, next) => {
-
-    const client = req.user._id
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getVisitsByType(page, limit, client, "emergency", res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const getFollowUpVisits = async (req, res, next) => {
-
-    const client = req.user._id
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getVisitsByType(page, limit, client, "follow up", res)
     }
 
     catch (error) {

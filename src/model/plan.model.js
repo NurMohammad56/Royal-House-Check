@@ -2,12 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const planSchema = new Schema({
 
-    clientId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-
     name: {
         type: String,
         required: true,
@@ -19,24 +13,16 @@ const planSchema = new Schema({
         required: true
     },
 
-    startDate: {
-        type: Date,
-        default: null
+    pack: {
+        type: String,
+        required: true,
+        enum: ["weekly", "monthly", "daily"]
     },
 
-    endDate: {
-        type: Date,
-        default: null
-    },
-
-    addsOnServices: [{
-        type: Schema.Types.ObjectId,
-        ref: "AddsOnService"
-    }],
-
-    isDeactivated: {
-        type: Boolean,
-        default: false
+    description: {
+        type: String,
+        required: true,
+        trim: true
     }
 
 }, { timestamps: true });

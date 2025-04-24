@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../config/config.js";
+import { type } from "os";
 
 const userSchema = new Schema({
     fullname: {
@@ -58,6 +59,20 @@ const userSchema = new Schema({
         enum: ["active", "inactive"],
         default: "active"
     },
+
+    planId: {
+        type: Schema.Types.ObjectId,
+        ref: "Plan"
+    },
+
+    purchasedDate: {
+        type: Date
+    },
+
+    isPlanActive: {
+        type: Boolean,
+        default: false
+    }
 },
     { timestamps: true }
 )
