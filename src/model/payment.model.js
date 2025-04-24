@@ -11,6 +11,11 @@ const paymentSchema = new Schema({
         ref: "Visit",
         default: null
     },
+    plan: {
+        type: Schema.Types.ObjectId,
+        ref: "Plan",
+        required: true,
+    },
     amount: {
         type: Number,
         required: true,

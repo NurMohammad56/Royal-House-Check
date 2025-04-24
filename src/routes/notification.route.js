@@ -8,8 +8,8 @@ import { updateUserActivity } from "../middleware/updateUserActivity.middleware.
 const router = express.Router();
 
 // Client
-router.get("/", verifyJWT, isClient, updateUserActivity, getNotifications);
-router.put("/:notificationId/read", verifyJWT,isClient,updateUserActivity, markNotificationAsRead);
+router.get("/user", verifyJWT, isClient, updateUserActivity, getNotifications);
+router.put("/user/:notificationId/read", verifyJWT,isClient,updateUserActivity, markNotificationAsRead);
 router.delete("/delete/:notificationId", verifyJWT,isClient, updateUserActivity, deleteNotification);
 
 // Admin
