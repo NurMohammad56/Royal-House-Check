@@ -41,7 +41,7 @@ export const getAllPlans = async (_, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Plans fetched successfully",
-            data: populatedPlans
+            data: plans
         });
     }
 

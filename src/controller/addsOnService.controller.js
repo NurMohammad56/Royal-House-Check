@@ -6,7 +6,7 @@ export const addAddsOnService = async (req, res, next) => {
     const { addOn, price, endDate } = req.body;
 
     try {
-        let addsOnService
+        let addsOnService;
         const plan = await Plan.findById(planId);
         if (!plan) {
             return res.status(404).json({
@@ -17,7 +17,6 @@ export const addAddsOnService = async (req, res, next) => {
 
         // for weekly or monthly services
         if (endDate) {
-
             if (new Date().getTime() >= new Date(endDate).getTime()) {
                 return res.status(400).json({
                     status: false,
@@ -33,7 +32,6 @@ export const addAddsOnService = async (req, res, next) => {
                 planId
             });
         }
-
         // for per visits services
         else {
             addsOnService = await AddsOnService.create({
@@ -43,17 +41,20 @@ export const addAddsOnService = async (req, res, next) => {
             });
         }
 
+        // Ensure addsOnServices is an array
+        if (!Array.isArray(plan.addsOnServices)) {
+            plan.addsOnServices = [];
+        }
+
         plan.addsOnServices.push(addsOnService._id);
-        await plan.save()
+        await plan.save();
 
         return res.status(201).json({
             status: true,
             message: "Adds on service added successfully",
             data: addsOnService
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
