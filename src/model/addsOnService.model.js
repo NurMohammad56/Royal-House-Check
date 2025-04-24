@@ -18,11 +18,6 @@ const addsOnServiceSchema = new Schema({
         type: String,
         required: true,
         trim: true
-    },
-    planId: {
-        type: Schema.Types.ObjectId,
-        ref: "Plan",
-        required: true
     }
 }, { timestamps: true });
 

@@ -1,10 +1,12 @@
 import express from "express";
-import { verifyJWT } from "../middleware/auth.middleware.js";
-import { isClient } from "../middleware/role.middleware.js";
-import { addAddsOnService } from "../controller/addsOnService.controller.js";
+import { createAddsOnService, deleteAddsOnService, getAddsOnServiceById, getAllAddsOnServices, updateAddsOnService } from "../controller/addsOnService.controller.js";
 
 const router = express.Router();
 
-router.post("/add-addsOnService/:planId", verifyJWT, isClient, addAddsOnService);
+router.post("/create-addsOnService", createAddsOnService);
+router.get("/get-all-addsOnService", getAllAddsOnServices);
+router.get("/get-addsOnService/:id", getAddsOnServiceById);
+router.put("/update-addsOnService/:id", updateAddsOnService);
+router.delete("/delete-addsOnService/:id", deleteAddsOnService);
 
 export default router;
