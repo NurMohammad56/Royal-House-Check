@@ -16,6 +16,10 @@ router.get("/get-all-plans", verifyJWT, isAdmin, getAllPlans);
 router.get("/get-a-plan/:id", verifyJWT, isClient, getAPlan);
 router.patch("/update-plan/:id", verifyJWT, isClient, updatePlan);
 router.delete("/delete-plan/:id", verifyJWT, deletePlan);
+router.get("/get-all-plans", verifyJWT, getAllPlans);
+router.get("/get-a-plan/:id", verifyJWT, getAPlan);
+router.patch("/update-plan/:id", verifyJWT, updatePlan);
+router.patch("/delete-plan/:id", verifyJWT, deletePlan);
 
 
 export default router;
