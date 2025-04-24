@@ -1,11 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
-    visitCode: {
-        type: String,
-        required: true,
-        unique: true
-    },
     client: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -25,14 +20,10 @@ const visitSchema = new Schema({
         type: Date,
         required: true
     },
-    amount: {
-        type: Number,
-        get: v => parseFloat(v.toFixed(2))
-    },
     status: {
         type: String,
-        enum: [      ],
-        default: 'pending'
+        enum: ["completed", "cancelled", "confirmed"],
+        default: 'confirmed'
     },
     cancellationReason: {
         type: String,
@@ -76,10 +67,6 @@ const visitSchema = new Schema({
             trim: true
         }
     }],
-    isPaid: {
-        type: Boolean,
-        default: false
-    },
     plan: {
         type: Schema.Types.ObjectId,
         ref: 'Plan',
