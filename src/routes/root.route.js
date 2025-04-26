@@ -27,5 +27,4 @@ export const rootRouter = (app) => {
     app.use('/api/v1/discounts', discountRouter)
     app.use('/api/v1/payments', paymentRouter)
     app.use('/api/v1/admin', adminMatricsRouter)
-    app.use('/api/v1/webhook', webhookRouter)
 }
