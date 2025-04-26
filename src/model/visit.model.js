@@ -19,8 +19,8 @@ const visitSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["completed", "cancelled", "confirmed"],
-        default: 'confirmed'
+        enum: ["completed", "cancelled", "confirmed", "pending"],
+        default: 'pending'
     },
     cancellationReason: {
         type: String,
@@ -47,7 +47,6 @@ const visitSchema = new Schema({
         },
         type: {
             type: String,
-            enum: ["warning", "red alert"]
         },
         media: [{
             type: {

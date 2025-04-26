@@ -1,15 +1,8 @@
 import express from "express";
 import {
-    totalActivePlansController,
-    monthlyRevenueController,
-    activeDiscountsController,
-    totalUserController,
-    totalAdminController,
-    totalStaffController,
-    getActiveUsersController,
+    getAdminMetricsAndRevenueController,
     getRevenueGrowthController,
     getRecentUserActivityController,
-    getInActiveUsersController
 } from "../controller/adminMatrics.controller.js";
 import { getAllUsers, addUser, updateUser, deleteUser, getUserByRoleStatus } from '../controller/manageUser.controller.js'
 
@@ -19,14 +12,7 @@ import { isAdmin } from "../middleware/role.middleware.js"
 const router = express.Router();
 
 // Metrics
-router.get("/metrics/active-plans", verifyJWT, isAdmin, totalActivePlansController);
-router.get("/metrics/monthly-revenue", verifyJWT, isAdmin, monthlyRevenueController);
-router.get("/metrics/active-discounts", verifyJWT, isAdmin, activeDiscountsController);
-router.get("/metrics/total-client", verifyJWT, isAdmin, totalUserController);
-router.get("/metrics/total-admin", verifyJWT, isAdmin, totalAdminController);
-router.get("/metrics/total-staff", verifyJWT, isAdmin, totalStaffController);
-router.get("/metrics/active-users", verifyJWT, isAdmin, getActiveUsersController);
-router.get("/metrics/inactive-users", verifyJWT, isAdmin, getInActiveUsersController);
+router.get('/metrics', getAdminMetricsAndRevenueController);
 router.get("/metrics/revenue-growth", verifyJWT, isAdmin, getRevenueGrowthController);
 router.get("/metrics/recent-user-activity/:userId", verifyJWT, isAdmin, getRecentUserActivityController);
 

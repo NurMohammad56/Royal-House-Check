@@ -82,6 +82,7 @@ export const addIssue = async (req, res, next) => {
 // Get issue by visit ID
 export const getAllIssues = async (req, res, next) => {
     const { visitId } = req.params;
+    console.log(visitId);
     try {
         const visit = await Visit.findById(visitId)
             .populate('client', 'fullname')

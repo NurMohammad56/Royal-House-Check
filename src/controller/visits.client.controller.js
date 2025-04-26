@@ -1,24 +1,28 @@
+import { Payment } from "../model/payment.model.js"
 import { Visit } from "../model/visit.model.js"
 import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
 
-    const { address, date, type, plan, addsOnService } = req.body
+    const { address, date } = req.body
     const client = req.user._id
 
     try {
-        if (!address || !date || !type) {
+        if (!address || !date) {
             return res.status(400).json({
                 status: false,
                 message: "Please provide all required fields"
             })
         }
 
-        await createVisitService({ address, date, type, plan, addsOnService }, client, res)
+        const isPaid = await Payment.findOne({ user: client}).select("status")
+
+        const visitData = await createVisitService({ address, date, isPaid: isPaid?.status == "completed"?true: false, status: "pending"   }, client, res)
 
         return res.status(201).json({
             status: true,
-            message: "Visit created successfully"
+            message: "Visit created successfully",
+            data: visitData
         })
     }
 

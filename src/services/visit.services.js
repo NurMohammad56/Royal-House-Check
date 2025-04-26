@@ -174,7 +174,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
     };
 
     const visits = await Visit.find(query)
-        .populate("client staff")
+        .populate({path: "client staff", select: "-sessions -refreshToken"})
         .sort({ date: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit))
@@ -195,20 +195,18 @@ export const getPastVisitsService = async (page, limit, client, res) => {
     });
 };
 
-export const getUpcomingVisitsService = async (page, limit, client, res) => {
+export const getUpcomingVisitsService = async (page, limit, res) => {
 
     const visits = await Visit.find({
-        client,
-        date: { $gte: new Date() }
+        status: { $in: "pending"}
     })
-        .populate("client staff")
+        .populate({path: "client", select: "-sessions -refreshToken"})
         .sort({ date: 1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
 
     const total = await Visit.countDocuments({
-        client,
-        date: { $gte: new Date() }
+        status: { $in: "pending"}
     });
 
     return res.status(200).json({
@@ -225,12 +223,7 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
 }
 
 export const updateVisitService = async (body, id) => {
-    const { client, date } = body;
-
-    // Check if visit date is in the future
-    if (new Date(date).getTime() < new Date().getTime()) {
-        throw new Error("Visit date must be in the future");
-    }
+    
 
     // Validate visit ID
     const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status");
@@ -246,8 +239,8 @@ export const updateVisitService = async (body, id) => {
 
     // Check for duplicate visits
     const existingVisit = await Visit.findOne({
-        date,
-        client,
+        date: visit.date,
+        client: visit.client,
         status: { $in: ["pending", "confirmed"] },
     });
 
@@ -257,7 +250,7 @@ export const updateVisitService = async (body, id) => {
 
     const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true })
         .select("-createdAt -updatedAt -__v")
-        .populate("client staff");
+        .populate({path: "client staff", select: "-sessions -refreshToken"});
 
     return updatedVisit;
 };

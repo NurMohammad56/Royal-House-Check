@@ -1,7 +1,5 @@
 import {
-    getTotalActivePlans,
     getMonthlyRevenue,
-    getActiveDiscounts,
     totalUser,
     totalAdmin,
     totalStaff,
@@ -10,110 +8,45 @@ import {
     getRecentUserActivity,
     countInactiveUsers
 } from "../services/adminMatrics.services.js";
+import {Visit} from "../model/visit.model.js";
 
-export const totalActivePlansController = async (_, res, next) => {
+export const getAdminMetricsAndRevenueController = async (_, res, next) => {
     try {
-        const total = await getTotalActivePlans();
+        const [
+            totalUsers,
+            totalAdmins,
+            totalStaffMembers,
+            activeUsersCount,
+            inactiveUsersCount,
+            totalVisits,
+            pendingVisits,
+            monthlyRevenue
+        ] = await Promise.all([
+            totalUser(),
+            totalAdmin(),
+            totalStaff(),
+            getActiveUsersCount(),
+            countInactiveUsers(),
+            Visit.countDocuments({}),
+            Visit.countDocuments({ status: "pending" }),
+            getMonthlyRevenue()
+        ]);
+
         return res.status(200).json({
             status: true,
-            message: "Total active plans fetched successfully",
-            totalActivePlans: total
+            message: "Admin metrics and monthly revenue fetched successfully",
+            data: {
+                totalUsers,
+                totalAdmins,
+                totalStaffMembers,
+                activeUsersCount,
+                inactiveUsersCount,
+                totalVisits,
+                pendingVisits,
+                monthlyRevenue
+            }
         });
     } catch (error) {
-        next(error);
-    }
-};
-
-export const monthlyRevenueController = async (_, res, next) => {
-    try {
-        const revenue = await getMonthlyRevenue();
-        return res.status(200).json({
-            status: true,
-            message: "Monthly revenue fetched successfully",
-            monthlyRevenue: revenue
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const activeDiscountsController = async (_, res, next) => {
-    try {
-        const discounts = await getActiveDiscounts();
-        return res.status(200).json({
-            status: true,
-            message: "Active discounts fetched successfully",
-            activeDiscounts: discounts
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-
-// This controller fetches the total number of users in the system
-export const totalUserController = async (_, res, next) => {
-    try {
-        const total = await totalUser();
-        return res.status(200).json({
-            status: true,
-            message: "Total users fetched successfully",
-            data: total
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const totalAdminController = async (_, res, next) => {
-    try {
-        const total = await totalAdmin();
-        return res.status(200).json({
-            status: true,
-            message: "Total admins fetched successfully",
-            data: total
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const totalStaffController = async (_, res, next) => {
-    try {
-        const total = await totalStaff();
-        return res.status(200).json({
-            status: true,
-            message: "Total staff fetched successfully",
-            data: total
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const getActiveUsersController = async (_, res, next) => {
-    try {
-        const total = await getActiveUsersCount();
-        return res.status(200).json({
-            status: true,
-            message: "Fetched active users count for admin",
-            data: total,
-        });
-    } catch (error) {
-        console.error("Error getting active users count:", error);
-        next(error);
-    }
-};
-export const getInActiveUsersController = async (_, res, next) => {
-    try {
-        const total = await countInactiveUsers();
-        return res.status(200).json({
-            status: true,
-            message: "Fetched inactive users count for admin",
-            data: total,
-        });
-    } catch (error) {
-        console.error("Error getting active users count:", error);
         next(error);
     }
 };
@@ -146,3 +79,5 @@ export const getRecentUserActivityController = async (req, res, next) => {
         next(error);
     }
 }
+
+
