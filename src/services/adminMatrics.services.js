@@ -4,10 +4,6 @@ import { Discount } from "../model/discount.model.js";
 import { User } from "../model/user.model.js";
 import moment from "moment";
 
-// Get total active plans
-export const getTotalActivePlans = async () => {
-    return await Plan.countDocuments({ isActive: true });
-};
 
 // Get monthly revenue
 export const getMonthlyRevenue = async () => {

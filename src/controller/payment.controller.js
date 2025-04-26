@@ -104,7 +104,7 @@ export const checkPaymentStatus = async (req, res, next) => {
   }
 }
 
-export const getAllPayments = async (req, res, next) => {
+export const getAllPayments = async (req, res, next) => {    
   try {
     const { page = 1, limit = 10, status } = req.query
     const query = {}
@@ -114,7 +114,14 @@ export const getAllPayments = async (req, res, next) => {
     }
 
     const payments = await Payment.find(query)
-      .populate('user plan')
+      .populate({
+      path: 'user',
+      select: 'fullname', // Populate only the user's name
+      })
+      .populate({
+      path: 'plan',
+      select: 'name price pack status', // Populate specific fields from the plan
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit))

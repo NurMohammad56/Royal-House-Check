@@ -27,7 +27,7 @@ router.get('/get-past-visits/:client', verifyJWT, isAdmin, getPastVisits)
 
 // router.get('/get-visits-type/:type', verifyJWT, isAdmin, getVisitsByType)
 
-router.get('/get-upcoming-visits/:client',  getUpcomingVisits)
+router.get('/get-upcoming-visits',  getUpcomingVisits)
 
 router.patch('/update-visit/:id',  updateVisit)
 

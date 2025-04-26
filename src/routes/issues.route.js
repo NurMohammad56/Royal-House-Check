@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { addIssue, getAllIssues, getAllVisitsWithIssues, deleteVisit } from "../controller/issues.controller.js";
-import { uploadFields } from "../middleware/multer.middleware.js"; // import correctly
+import { uploadFields } from "../middleware/multer.middleware.js"; 
 import { updateUserActivity } from "../middleware/updateUserActivity.middleware.js";
 
 

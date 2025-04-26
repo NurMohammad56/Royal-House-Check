@@ -116,7 +116,7 @@ export const getAdminAllVisit = async (req, res, next) => {
     try {
         // Fetch all visits with population
         const allVisits = await Visit.find()
-            .populate("client staff").select("-session")
+            .populate({path: "client staff", select:"-sessions -refreshToken"})
 
         // Filter by search and status
         let filtered = allVisits.filter(v => {
@@ -268,12 +268,12 @@ export const getPastVisits = async (req, res, next) => {
 
 //admin gets all upcoming visits for a client
 export const getUpcomingVisits = async (req, res, next) => {
-    const { client } = req.params
+    
     const page = Number(req.query.page) || 1
     const limit = Number(req.query.limit) || 10
 
     try {
-        await getUpcomingVisitsService(page, limit, client, res)
+        await getUpcomingVisitsService(page, limit, res)
     }
 
     catch (error) {
@@ -297,19 +297,13 @@ export const getUpcomingVisits = async (req, res, next) => {
 //admin updates a specific visit for a client
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params;
-    const { clientEmail, staff, address, date, type, notes } = req.body;
+    const { staff, type, notes } = req.body;
 
     try {
-        const client = await User.findOne({ email: clientEmail });
-        if (!client) {
-            return res.status(404).json({
-                status: false,
-                message: "Client not found",
-            });
-        }
+
     
         const updatedVisit = await updateVisitService(
-            { client: client._id, staff, address, date, type, notes, status: "confirmed" },
+            { staff, type, notes, status: "confirmed" },
             id
         );
     
