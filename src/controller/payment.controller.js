@@ -104,7 +104,6 @@ export const checkPaymentStatus = async (req, res, next) => {
   }
 }
 
-
 export const getAllPayments = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, status } = req.query
@@ -132,6 +131,27 @@ export const getAllPayments = async (req, res, next) => {
         totalItems: total,
         itemsPerPage: Number(limit),
       },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const userAllPayment = async (req, res, next) => {
+  try {
+    const { userId } = req.params
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ status: false, message: 'User id is required.' })
+    }
+
+    const payments = await Payment.find({ user: userId }).populate('user plan')
+
+    return res.status(200).json({
+      status: true,
+      message: 'User payments fetched successfully',
+      data: payments,
     })
   } catch (error) {
     next(error)
