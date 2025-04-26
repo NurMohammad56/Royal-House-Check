@@ -4,7 +4,6 @@ const visitSchema = new Schema({
     client: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     },
     staff: {
         type: Schema.Types.ObjectId,
@@ -13,12 +12,10 @@ const visitSchema = new Schema({
     },
     address: {
         type: String,
-        required: true,
         trim: true
     },
     date: {
         type: Date,
-        required: true
     },
     status: {
         type: String,
@@ -67,10 +64,13 @@ const visitSchema = new Schema({
             trim: true
         }
     }],
+    isPaid: {
+        type: Boolean,
+        default: false
+    },
     plan: {
         type: Schema.Types.ObjectId,
         ref: 'Plan',
-        required: true
     },
     addsOnService: {
         type: Schema.Types.ObjectId,
