@@ -16,64 +16,51 @@ export const createCode = async () => {
     return code;
 }
 
-export const createVisitService = async (body, client, res) => {
-
-    const { date } = body
-
-    if (!body.client) {
-        body.client = client
+export const createVisitService = async (visitData, clientId) => {
+    if (!visitData.status) {
+        throw new Error("Status is required");
     }
 
-    if (new Date(date).getTime() < new Date().getTime()) {
-        return res.status(400).json({
-            status: false,
-            message: "Visit date must be in the future"
-        })
-    }
-
-    const visit = await Visit.findOne({ client, date }).lean()
-
-    if (visit) {
-        return res.status(400).json({
-            status: false,
-            message: "A visit with the same date already exists"
-        })
-    }
-
-    const code = await createCode()
-
-    await Visit.create({ visitCode: code, ...body })
-
-    return
-}
-
-export const getAllVisitsService = async (page, limit, client, res) => {
-
-    const visits = await Visit.find({
-        client
-    })
-        .populate("client staff")
-        .sort({ date: 1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit))
-        .lean()
-
-    const total = await Visit.countDocuments({
-        client
+    const visit = new Visit({
+        ...visitData,
+        client: clientId,
     });
 
-    return res.status(200).json({
-        status: true,
-        message: "All visits fetched successfully",
-        data: visits,
-        pagination: {
-            currentPage: Number(page),
-            totalPages: Math.ceil(total / limit),
-            totalItems: total,
-            itemsPerPage: Number(limit)
+    return await visit.save();
+};
+//  get all visits by both
+export const getAllVisitsService = async (page, limit, status, res) => {
+    try {
+        const query = {};
+
+        if (status) {
+            query.status = status;
         }
-    })
-}
+
+        const total = await Visit.countDocuments(query);
+
+        const visits = await Visit.find(query)
+            .populate("client staff")
+            .sort({ date: 1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        return res.status(200).json({
+            status: true,
+            message: "All visits fetched successfully",
+            data: visits,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                itemsPerPage: limit
+            }
+        });
+    } catch (error) {
+        throw new Error("Error fetching visits: " + error.message);
+    }
+};
 
 //get visits by status
 export const getVisits = async (client, status, res) => {
@@ -181,20 +168,19 @@ export const getVisitsByTypeService = async (page, limit, client, type, res) => 
 }
 
 export const getPastVisitsService = async (page, limit, client, res) => {
-
-    const visits = await Visit.find({
+    const query = {
         client,
-        date: { $lt: new Date() }
-    })
+        status: "completed"
+    };
+
+    const visits = await Visit.find(query)
         .populate("client staff")
-        .sort({ date: -1 }) // most recent first
+        .sort({ date: -1 })
         .skip((page - 1) * limit)
-        .limit(Number(limit));
+        .limit(Number(limit))
+        .lean();
 
-    const total = await Visit.countDocuments({
-        client,
-        date: { $lt: new Date() }
-    });
+    const total = await Visit.countDocuments(query);
 
     return res.status(200).json({
         status: true,
@@ -207,7 +193,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
             itemsPerPage: Number(limit)
         }
     });
-}
+};
 
 export const getUpcomingVisitsService = async (page, limit, client, res) => {
 
@@ -238,51 +224,42 @@ export const getUpcomingVisitsService = async (page, limit, client, res) => {
     });
 }
 
-export const updateVisitService = async (body, id, client, res) => {
+export const updateVisitService = async (body, id) => {
+    const { client, date } = body;
 
-    const { date } = body
-
-    //checking if the provided date is in the future
+    // Check if visit date is in the future
     if (new Date(date).getTime() < new Date().getTime()) {
-        return res.status(400).json({
-            status: false,
-            message: "Visit date must be in the future"
-        })
+        throw new Error("Visit date must be in the future");
     }
 
-    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status")
+    // Validate visit ID
+    const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status");
 
-    //checking if the visit id is valid or not
     if (!visit) {
-        return res.status(404).json({
-            status: false,
-            message: "Visit not found"
-        });
+        throw new Error("Visit not found");
     }
 
-    //checking if the visit is completed or cancelled
+    // Check if visit is already completed or cancelled
     if (visit.status === "completed" || visit.status === "cancelled") {
-        return res.status(403).json({
-            status: false,
-            message: "You cannot update the visit which is completed or cancelled"
-        })
+        throw new Error("You cannot update a visit that is completed or cancelled");
     }
 
+    // Check for duplicate visits
     const existingVisit = await Visit.findOne({
         date,
         client,
-        status: { $in: ["pending", "confirmed"] }
-    })
+        status: { $in: ["pending", "confirmed"] },
+    });
 
-    // checking if the visit date is already taken by another visit
     if (existingVisit && existingVisit._id.toString() !== id) {
-        return res.status(400).json({
-            status: false,
-            message: "You already taken a visit in this date"
-        });
+        throw new Error("You already have a visit on this date");
     }
 
-    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true }).select("-createdAt -updatedAt -__v")
+    const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true })
+        .select("-createdAt -updatedAt -__v")
+        .populate("client staff");
 
-    return updatedVisit
-}
+    return updatedVisit;
+};
+
+

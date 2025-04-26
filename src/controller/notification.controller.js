@@ -68,7 +68,7 @@ export const getAdminNotifications = async (req, res, next) => {
             .populate({
                 path: "userId",
                 select: "fullname email role",
-                match: { role: { $ne: "admin" } } 
+                match: { role: { $ne: "admin" } }
             })
             .populate({
                 path: "relatedEntity",

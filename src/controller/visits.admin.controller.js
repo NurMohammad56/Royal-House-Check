@@ -1,21 +1,45 @@
 import { Visit } from "../model/visit.model.js";
 import { Notification } from "../model/notfication.model.js";
-import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
+import { createVisitService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js";
 import mongoose from "mongoose";
+import { User } from "../model/user.model.js";
 
 //admin creates a visit for a client
 export const createVisit = async (req, res, next) => {
-    const { client, staff, type, address, date, plan, addsOnService } = req.body
+    const { clientEmail, staff, type, address, date, note } = req.body;
 
     try {
-        if (!client || !staff || !address || !date || !type || !plan) {
+        // Validate required fields
+        if (!clientEmail || !staff || !address || !date || !type) {
             return res.status(400).json({
                 status: false,
-                message: "Please provide all required fields"
-            })
+                message: "Please provide all required fields",
+            });
         }
 
-        await createVisitService({ client, staff, type, address, date, status: "confirmed", plan, addsOnService }, client, res)
+        // Find the client by email
+        const client = await User.findOne({ email: clientEmail });
+        if (!client) {
+            return res.status(404).json({
+                status: false,
+                message: "Client not found",
+            });
+        }
+
+        // Prepare visit data
+        const visitData = {
+            client: client._id,
+            staff,
+            type,
+            address,
+            date,
+            note,
+            status: "confirmed", // Ensure status is included
+            isPaid: true,
+        };
+
+        // Call the service
+        const response = await createVisitService(visitData, client._id);
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
             weekday: "short",
@@ -24,12 +48,12 @@ export const createVisit = async (req, res, next) => {
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            hour12: true
+            hour12: true,
         });
 
         // Notify client
         await Notification.create({
-            userId: client,
+            userId: client._id,
             type: "visit schedule",
             message: `Visit scheduled for ${formattedDate}`,
         });
@@ -45,97 +69,40 @@ export const createVisit = async (req, res, next) => {
 
         return res.status(201).json({
             status: true,
-            message: "Visit created successfully"
-        })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-//admin gets all visits count
-export const getAllVisitsCount = async (_, res, next) => {
-
-    try {
-        const totalVisits = await Visit.countDocuments();
-
-        return res.status(200).json({
-            status: true,
-            message: "Total visits count fetched successfully",
-            total: totalVisits
+            message: "Visit created successfully",
+            data: response,
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
 
-//admin gets all pending visits count
-export const getPendingVisitsCount = async (_, res, next) => {
+//admin gets all visits count
+export const getAllVisitsCount = async (req, res, next) => {
+    const { status } = req.query;
+
+    const allowedStatuses = ["confirmed", "completed", "cancelled"];
 
     try {
-        const totalVisits = await Visit.countDocuments({ status: "pending" })
+        if (!status || !allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid or missing status. Allowed: confirmed, completed, cancelled",
+            });
+        }
+
+        const count = await Visit.countDocuments({ status });
 
         return res.status(200).json({
             status: true,
-            message: "Total pending visits count fetched successfully",
-            total: totalVisits
-        });
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-//admin gets all confirmed visits count
-export const getConfirmedVisitsCount = async (_, res, next) => {
-
-    try {
-        const totalVisits = await Visit.countDocuments({ status: "confirmed" })
-
-        return res.status(200).json({
-            status: true,
-            message: "Total confirmed visits count fetched successfully",
-            total: totalVisits
-        });
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-//admin gets all in progress visits count today
-export const getInProgressVisitsCount = async (_, res, next) => {
-
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-    try {
-        const todayVisits = await Visit.countDocuments({
-            date: {
-                $gte: startOfDay,
-                $lte: endOfDay
-            },
-            status: "confirmed"
+            message: `Visits count fetched successfully for status: ${status}`,
+            total: count,
         });
 
-        return res.status(200).json({
-            status: true,
-            message: "Total in progress visits count fetched successfully",
-            total: todayVisits
-        });
+    } catch (error) {
+        next(error);
     }
-    catch (error) {
-        next(error)
-    }
-}
+};
 
 export const getAdminAllVisit = async (req, res, next) => {
 
@@ -149,9 +116,7 @@ export const getAdminAllVisit = async (req, res, next) => {
     try {
         // Fetch all visits with population
         const allVisits = await Visit.find()
-            .populate("client staff")
-            .populate("plan")
-            .populate("addsOnService");
+            .populate("client staff").select("-session")
 
         // Filter by search and status
         let filtered = allVisits.filter(v => {
@@ -200,22 +165,6 @@ export const getAdminAllVisit = async (req, res, next) => {
         next(error)
     }
 };
-
-//admin will gte all visits of a client
-export const getAllVisits = async (req, res, next) => {
-
-    const { client } = req.params
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-
-    try {
-        await getAllVisitsService(page, limit, client, res)
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
 
 //admin gets all confirmed visits for a client
 export const getConfirmedVisits = async (req, res, next) => {
@@ -347,12 +296,23 @@ export const getUpcomingVisits = async (req, res, next) => {
 
 //admin updates a specific visit for a client
 export const updateVisit = async (req, res, next) => {
-    const { id } = req.params
-    const { client, staff, address, date, type, notes, plan, addsOnService } = req.body
+    const { id } = req.params;
+    const { clientEmail, staff, address, date, type, notes } = req.body;
 
     try {
-        const updatedVisit = await updateVisitService({ client, staff, address, date, type, notes, status: "confirmed", plan, addsOnService }, id, client, res).populate("client staff")
-
+        const client = await User.findOne({ email: clientEmail });
+        if (!client) {
+            return res.status(404).json({
+                status: false,
+                message: "Client not found",
+            });
+        }
+    
+        const updatedVisit = await updateVisitService(
+            { client: client._id, staff, address, date, type, notes, status: "confirmed" },
+            id
+        );
+    
         const formattedDate = new Date(updatedVisit.date).toLocaleString("en-US", {
             weekday: "short",
             year: "numeric",
@@ -360,37 +320,36 @@ export const updateVisit = async (req, res, next) => {
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            hour12: true
+            hour12: true,
         });
-
-        // Notify client
+    
+        // Notify users
         await Notification.create({
-            userId: updatedVisit.client,
+            userId: updatedVisit.client._id,
             type: "visit update",
             message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
         });
-
-        // Notify staff
+    
         if (updatedVisit.staff) {
             await Notification.create({
-                userId: updatedVisit.staff,
+                userId: updatedVisit.staff._id,
                 type: "visit update",
                 message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
             });
         }
-
+    
         return res.status(200).json({
             status: true,
             message: "Visit updated successfully",
-            data: updatedVisit
-        })
-    }
-
-    catch (error) {
-        next(error)
+            data: updatedVisit,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.message || "Something went wrong",
+        });
     }
 }
-
 export const updateVisitStaff = async (req, res, next) => {
     const { id } = req.params
     const { staff } = req.body

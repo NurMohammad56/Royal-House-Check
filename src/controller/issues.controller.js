@@ -1,63 +1,150 @@
+import { User } from "../model/user.model.js";
 import { Visit } from "../model/visit.model.js"
 import { cloudinaryUploadImage, cloudinaryUploadVideo } from "../utils/cloudinary.utils.js";
 
-export const getAllIssues = async (req, res, next) => {
-    const { visitId } = req.params
+export const addIssue = async (req, res, next) => {
+    const { email, place, issue, type, notes } = req.body;
 
     try {
-        const { issues } = await Visit.findById(visitId).select("issues")
-
-        if (!issues) {
+        // Find the user by email to get their ID
+        const user = await User.findOne({ email }).select('_id');
+        if (!user) {
             return res.status(404).json({
                 status: false,
-                message: "No issues found"
-            })
+                message: "User not found with the provided email"
+            });
+        }
+
+        // Find the existing visit by client ID
+        const existingVisit = await Visit.findOne({ client: user._id }).lean();
+        if (!existingVisit) {
+            return res.status(404).json({
+                status: false,
+                message: "No visit found for the provided email"
+            });
+        }
+
+        const timestamp = Date.now();
+
+        // Upload media to Cloudinary (if provided)
+        const [cloudinaryImage, cloudinaryVideo] = await Promise.all([
+            req.files?.image?.[0]?.path
+                ? cloudinaryUploadImage(req.files.image[0].path, `email-${email}-image-${timestamp}`, "issues/images")
+                : null,
+            req.files?.video?.[0]?.path
+                ? cloudinaryUploadVideo(req.files.video[0].path, `email-${email}-video-${timestamp}`, "issues/videos")
+                : null
+        ]);
+
+        const imageUrl = cloudinaryImage?.secure_url;
+        const videoUrl = cloudinaryVideo?.secure_url;
+
+        const media = [];
+        if (imageUrl) media.push({ type: "photo", url: imageUrl });
+        if (videoUrl) media.push({ type: "video", url: videoUrl });
+
+        // Create a new Visit document, copying fields from the existing visit
+        const newVisit = await Visit.create({
+            client: existingVisit.client,
+            staff: existingVisit.staff || null,
+            address: existingVisit.address,
+            date: existingVisit.date,
+            status: existingVisit.status || "confirmed",
+            cancellationReason: existingVisit.cancellationReason || "",
+            type: existingVisit.type,
+            notes: existingVisit.notes || "",
+            issues: [{
+                place,
+                issue,
+                type: type || "warning",
+                media,
+                notes
+            }],
+            isPaid: existingVisit.isPaid || false,
+        });
+
+        // Populate client and staff fields
+        const populatedVisit = await Visit.findById(newVisit._id)
+            .populate('client', 'fullname')
+            .populate('staff', 'fullname')
+            .lean();
+
+        return res.status(201).json({
+            status: true,
+            message: "New visit with issue created successfully",
+            data: populatedVisit
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get issue by visit ID
+export const getAllIssues = async (req, res, next) => {
+    const { visitId } = req.params;
+    try {
+        const visit = await Visit.findById(visitId)
+            .populate('client', 'fullname')
+            .populate('staff', 'fullname')
+            .lean();
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            });
+        }
+        return res.status(200).json({
+            status: true,
+            message: "Visit fetched successfully",
+            data: visit
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+
+
+// get all visits associated with issues
+export const getAllVisitsWithIssues = async (req, res, next) => {
+    try {
+        const visits = await Visit.find({ "issues.0": { $exists: true } });
+        if (!visits || visits.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No visits found"
+            });
         }
 
         return res.status(200).json({
             status: true,
-            message: "Issues fetched successfully",
-            data: issues
-        })
+            message: "Visits fetched successfully",
+            data: visits
+        });
     }
-
     catch (error) {
-        next(error)
+        next(error);
     }
 }
 
-export const addIssue = async (req, res, next) => {
-    const { visitId } = req.params
-    const { place, issue, type, notes } = req.body
+export const deleteVisit = async (req, res, next) => {
+    const { visitId } = req.params;
 
     try {
-        const timestamp = Date.now();
+        const visit = await Visit.findById(visitId)
+        if (!visit) {
+            return res.status(404).json({
+                status: false,
+                message: "Visit not found"
+            });
+        }
 
-        const [cloudinaryImage, cloudinaryVideo] = await Promise.all([
-            cloudinaryUploadImage(req.files?.image[0].path, `visit-${visitId}-image-${timestamp}`, "issues/images"),
-            cloudinaryUploadVideo(req.files?.video[0].path, `visit-${visitId}-video-${timestamp}`, "issues/videos")
-        ]);
-
-        const imageUrl = cloudinaryImage?.secure_url
-        const videoUrl = cloudinaryVideo?.secure_url
-
-        const media = [{
-            type: "photo",
-            url: imageUrl
-        }, {
-            type: "video",
-            url: videoUrl
-        }]
-
-        await Visit.findByIdAndUpdate(visitId, { $push: { issues: { place, issue, type, media, notes } } }).lean()
-
+        await Visit.findByIdAndDelete(visitId);
         return res.status(200).json({
             status: true,
-            message: "Issue added successfully"
-        })
+            message: "Visit deleted successfully"
+        });
+    } catch (error) {
+        next(error);
     }
-
-    catch (error) {
-        next(error)
-    }
-}
+};
