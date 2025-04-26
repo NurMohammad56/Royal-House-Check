@@ -50,6 +50,8 @@ export const activeDiscountsController = async (_, res, next) => {
     }
 };
 
+
+// This controller fetches the total number of users in the system
 export const totalUserController = async (_, res, next) => {
     try {
         const total = await totalUser();
