@@ -246,11 +246,11 @@ export const getNextVisit = async (req, res, next) => {
 
 export const updateVisit = async (req, res, next) => {
     const { id } = req.params
-    const { address, date, type, plan, addsOnService } = req.body
+    const { address, date } = req.body
     const client = req.user._id
 
     try {
-        const updatedVisit = await updateVisitService({ address, date, type, plan, addsOnService }, id, client, res).populate("client staff")
+        const updatedVisit = await updateVisitService({ address, date}, id, client, res).populate({path: "client staff", select: "-sessions -refreshToken"}).lean()
 
         return res.status(200).json({
             status: true,
