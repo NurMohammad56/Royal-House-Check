@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createVisit, getCancelledVisits, getConfirmedVisits, getCompletedVisits, updateVisit, getNextVisit, getPastVisits, getUpcomingVisits, getCompletedVisitsPagination, getCompletedVisitsWithIssues, getAllVisitForSpecificClient } from "../controller/visits.client.controller.js";
+import { createVisit, getCancelledVisits, getConfirmedVisits, getCompletedVisits, getAllIssuesCount, updateVisit, getNextVisit, getPastVisits, getUpcomingVisits, getCompletedVisitsPagination, getCompletedVisitsWithIssues, getAllVisitForSpecificClient } from "../controller/visits.client.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isClient } from "../middleware/role.middleware.js";
 import { updateUserActivity } from "../middleware/updateUserActivity.middleware.js";
@@ -28,4 +28,6 @@ router.get('/get-next-visit', verifyJWT, isClient, updateUserActivity, getNextVi
 
 router.patch('/update-visit/:id', verifyJWT, isClient, updateUserActivity, updateVisit);
 
-export default router;
+router.get('/get-all-issues-count', verifyJWT, isClient, updateUserActivity, getAllIssuesCount)
+
+export default router;     

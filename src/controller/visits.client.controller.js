@@ -15,9 +15,9 @@ export const createVisit = async (req, res, next) => {
             })
         }
 
-        const isPaid = await Payment.findOne({ user: client}).select("status")
+        const isPaid = await Payment.findOne({ user: client }).select("status")
 
-        const visitData = await createVisitService({ address, date, isPaid: isPaid?.status == "completed"?true: false, status: "pending"   }, client, res)
+        const visitData = await createVisitService({ address, date, isPaid: isPaid?.status == "completed" ? true : false, status: "pending" }, client, res)
 
         return res.status(201).json({
             status: true,
@@ -250,7 +250,7 @@ export const updateVisit = async (req, res, next) => {
     const client = req.user._id
 
     try {
-        const updatedVisit = await updateVisitService({ address, date}, id, client, res).populate({path: "client staff", select: "-sessions -refreshToken"}).lean()
+        const updatedVisit = await updateVisitService({ address, date }, id, client, res).populate({ path: "client staff", select: "-sessions -refreshToken" }).lean()
 
         return res.status(200).json({
             status: true,
@@ -263,3 +263,31 @@ export const updateVisit = async (req, res, next) => {
         next(error)
     }
 }
+
+// All issues count
+export const getAllIssuesCount = async (req, res, next) => {
+    const client = req.user._id;
+
+    try {
+        const visits = await Visit.find({ client }).populate("issues").lean();
+
+        if (!visits || visits.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No visits found"
+            });
+        }
+
+        const issuesCount = visits.reduce((count, visit) => {
+            return count + (visit.issues && visit.issues.length > 0 ? 1 : 0);
+        }, 0);
+
+        return res.status(200).json({
+            status: true,
+            message: "Issues count fetched successfully",
+            data: { issuesCount }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
