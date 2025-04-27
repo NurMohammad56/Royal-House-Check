@@ -72,3 +72,22 @@ export const getMessages = async (req, res, next) => {
         next(error);
     }
 };
+
+// Get all pending message count
+export const getPendingMessageCount = async (req, res, next) => {
+    try {
+        const count = await Message.countDocuments({
+            $or: [
+                { client: req.user.id, "messages.read": false },
+                { staff: req.user.id, "messages.read": false }
+            ]
+        });
+        return res.status(200).json({
+            status: true,
+            message: "Pending message count retrieved successfully",
+            data: count
+        });
+    } catch (error) {
+        next(error);
+    }
+};
