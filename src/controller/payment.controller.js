@@ -104,7 +104,7 @@ export const checkPaymentStatus = async (req, res, next) => {
   }
 }
 
-export const getAllPayments = async (req, res, next) => {    
+export const getAllPayments = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, status } = req.query
     const query = {}
@@ -115,12 +115,12 @@ export const getAllPayments = async (req, res, next) => {
 
     const payments = await Payment.find(query)
       .populate({
-      path: 'user',
-      select: 'fullname', // Populate only the user's name
+        path: 'user',
+        select: 'fullname', // Populate only the user's name
       })
       .populate({
-      path: 'plan',
-      select: 'name price pack status', // Populate specific fields from the plan
+        path: 'plan',
+        select: 'name price pack status', // Populate specific fields from the plan
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -153,7 +153,7 @@ export const userAllPayment = async (req, res, next) => {
         .json({ status: false, message: 'User id is required.' })
     }
 
-    const payments = await Payment.find({ user: userId }).populate('user plan')
+    const payments = await Payment.find({ user: userId }).populate({ path: 'user', select: 'fullname' }).populate({ path: "plan", select: "name price pack status" }).sort({ createdAt: -1 })
 
     return res.status(200).json({
       status: true,
@@ -164,3 +164,35 @@ export const userAllPayment = async (req, res, next) => {
     next(error)
   }
 }
+
+// get a payment by id
+export const getPaymentById = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params
+    if (!paymentId) {
+      return res.status(400).json({
+        status: false,
+        message: 'Payment ID is required',
+      })
+    }
+
+    const payment = await Payment.findById(paymentId)
+      .populate({ path: 'user', select: 'fullname' }).populate({ path: "plan", select: "name price pack status" })
+      .lean()
+
+    if (!payment) {
+      return res.status(404).json({
+        status: false,
+        message: 'Payment not found',
+      })
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: 'Payment fetched successfully',
+      data: payment,
+    })
+  } catch (error) {
+    next(error)
+  }
+} 
