@@ -65,7 +65,7 @@ export const getAllVisitsService = async (page, limit, status, res) => {
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).populate("client staff").sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).populate({path: "client staff", select:"fullname email"}).sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -174,7 +174,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
     };
 
     const visits = await Visit.find(query)
-        .populate({path: "client staff", select: "-sessions -refreshToken"})
+        .populate({path: "client staff", select: "fullname email"})
         .sort({ date: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit))

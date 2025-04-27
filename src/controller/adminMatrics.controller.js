@@ -51,19 +51,65 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
     }
 };
 
-export const getRevenueGrowthController = async (_, res, next) => {
-    try {
-        const growthData = await getPaymentGrowth();
+// controllers/revenueController.js
 
-        res.json({
-            status: true,
-            message: "Payment growth data fetched successfully",
-            data: growthData
-        });
+export const getRevenueGrowthController = async (req, res, next) => {
+    try {
+      const { range = "7d" } = req.query
+  
+      let data
+  
+      if (range === "7d") {
+        data = generateDailyData(7)
+      } else if (range === "1d") {
+        data = generateDailyData(1);
+      }
+      else if (range === "30d") {
+        data = generateDailyData(30)
+      } else if (range === "1y") {
+        data = generateMonthlyData(12)
+      } else {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid range. Use '7d', '30d', or '1y'."
+        })
+      }
+  
+      res.json({
+        status: true,
+        message: "Payment growth data fetched successfully",
+        data
+      })
     } catch (error) {
-        next(error);
+      next(error)
     }
-}
+  }
+  
+  // Helpers
+  function generateDailyData(days) {
+    const today = new Date()
+    return Array.from({ length: days }).map((_, i) => {
+      const date = new Date(today)
+      date.setDate(today.getDate() - (days - i - 1))
+      return {
+        date: date.toISOString().split("T")[0],
+        revenue: Math.floor(Math.random() * 1000) + 200
+      }
+    })
+  }
+  
+  function generateMonthlyData(months) {
+    const today = new Date()
+    return Array.from({ length: months }).map((_, i) => {
+      const date = new Date(today)
+      date.setMonth(today.getMonth() - (months - i - 1))
+      return {
+        date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
+        revenue: Math.floor(Math.random() * 30000) + 5000
+      }
+    })
+  }
+  
 
 export const getRecentUserActivityController = async (req, res, next) => {
     try {

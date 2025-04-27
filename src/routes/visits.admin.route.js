@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAdminAllVisit, createVisit, getAllVisitsCount, getCancelledVisits, getCompletedVisitsPagination, getCompletedVisits, getConfirmedVisits, getPendingVisits, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues, getPastVisits } from "../controller/visits.admin.controller.js";
+import { getAdminAllVisit, getSpecificVisit, createVisit, getAllVisitsCount, getCancelledVisits, getCompletedVisitsPagination, getCompletedVisits, getConfirmedVisits, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues, getPastVisits, getAllPendingVisits } from "../controller/visits.admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
 
@@ -13,7 +13,7 @@ router.get('/get-all-visits-count',  getAllVisitsCount);
 
 router.get('/get-confirmed-visits/:client',  getConfirmedVisits);
 
-router.get('/get-pending-visits/:client',  getPendingVisits);
+router.get('/get-pending-visits',  getAllPendingVisits);
 
 router.get('/get-completed-visits/:client',  getCompletedVisits);
 
@@ -32,5 +32,7 @@ router.get('/get-upcoming-visits',  getUpcomingVisits)
 router.patch('/update-visit/:id',  updateVisit)
 
 router.patch('/update-visit-staff/:id',  updateVisitStaff)
+
+router.get('/get-specific-visit/:id',  getSpecificVisit)
 
 export default router;
