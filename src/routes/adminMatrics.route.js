@@ -14,7 +14,7 @@ const router = express.Router();
 // Metrics
 router.get('/metrics', getAdminMetricsAndRevenueController);
 router.get("/metrics/revenue-growth", verifyJWT, isAdmin, getRevenueGrowthController);
-router.get("/metrics/recent-user-activity/:userId", verifyJWT, isAdmin, getRecentUserActivityController);
+router.get("/metrics/recent-user-activity", verifyJWT, isAdmin, getRecentUserActivityController);
 
 // User managements
 router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
