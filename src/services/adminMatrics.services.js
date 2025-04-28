@@ -204,10 +204,11 @@ export const getPaymentGrowth = async (next) => {
 export const getRecentUserActivity = async (userId) => {
     try {
 
-        const recentPayments = await Payment.find({ user: userId })
+        const recentPayments = await Payment.find()
             .sort({ createdAt: -1 })
             .limit(10)
             .populate("plan", "name price")
+            .populate("user", "fullname email")
             .lean();
 
         return recentPayments;

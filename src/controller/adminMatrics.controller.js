@@ -113,8 +113,8 @@ export const getRevenueGrowthController = async (req, res, next) => {
 
 export const getRecentUserActivityController = async (req, res, next) => {
     try {
-        const { userId } = req.params;
-        const recentActivity = await getRecentUserActivity(userId);
+
+        const recentActivity = await getRecentUserActivity();
 
         return res.json({
             status: true,
