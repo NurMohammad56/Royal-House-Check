@@ -120,3 +120,16 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllStaff = async (req, res, next) => {  
+  try {
+      const staff = await User.find({ role: "staff" }).select("-sessions -refreshToken").lean()
+      return res.status(200).json({
+          status: true,
+          message: "Staff fetched successfully",
+          data: staff
+      })
+  } catch (error) {
+      next(error)
+  }
+}
