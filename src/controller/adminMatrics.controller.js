@@ -6,7 +6,9 @@ import {
     getActiveUsersCount,
     getPaymentGrowth,
     getRecentUserActivity,
-    countInactiveUsers
+    countInactiveUsers,
+    completedVisitCount as getCompletedVisitCount,
+    confirmedVisitCount as getConfirmedVisitCount
 } from "../services/adminMatrics.services.js";
 import {Visit} from "../model/visit.model.js";
 
@@ -20,7 +22,9 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
             inactiveUsersCount,
             totalVisits,
             pendingVisits,
-            monthlyRevenue
+            monthlyRevenue,
+            completedVisitCount,
+            confirmedVisitCount
         ] = await Promise.all([
             totalUser(),
             totalAdmin(),
@@ -29,7 +33,9 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
             countInactiveUsers(),
             Visit.countDocuments({}),
             Visit.countDocuments({ status: "pending" }),
-            getMonthlyRevenue()
+            getMonthlyRevenue(),
+            getCompletedVisitCount(),
+            getConfirmedVisitCount(),
         ]);
 
         return res.status(200).json({
@@ -43,7 +49,9 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
                 inactiveUsersCount,
                 totalVisits,
                 pendingVisits,
-                monthlyRevenue
+                monthlyRevenue,
+                completedVisitCount,
+                confirmedVisitCount
             }
         });
     } catch (error) {
