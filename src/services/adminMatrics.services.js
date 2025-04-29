@@ -3,6 +3,7 @@ import { Payment } from "../model/payment.model.js";
 import { Discount } from "../model/discount.model.js";
 import { User } from "../model/user.model.js";
 import moment from "moment";
+import { Visit } from "../model/visit.model.js";
 
 
 // Get monthly revenue
@@ -215,5 +216,23 @@ export const getRecentUserActivity = async (userId) => {
 
     } catch (error) {
         throw new Error("Unable to fetch recent user activity. Please try again later.");
+    }
+};
+
+export const completedVisitCount = async () => {
+    try {
+        const count = await Visit.countDocuments({ status: "completed" });
+        return count;
+    } catch (error) {
+        console.error("Error getting completed visit count:", error);
+    }
+};
+
+export const  confirmedVisitCount = async () => {
+    try {
+        const count = await Visit.countDocuments({ status: "confirmed" });
+        return count;
+    } catch (error) {
+        console.error("Error getting confirmed visit count:", error);
     }
 };
