@@ -6,7 +6,7 @@ import { updateUserActivity } from "../middleware/updateUserActivity.middleware.
 
 const router = Router();
 
-router.post('/create-visit', verifyJWT, isClient, updateUserActivity, createVisit);
+router.post('/create-visit', verifyJWT, updateUserActivity, createVisit);
 
 router.get("/get-visit-client", verifyJWT, isClient, updateUserActivity, getAllVisitForSpecificClient);
 

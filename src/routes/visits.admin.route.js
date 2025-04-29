@@ -7,7 +7,7 @@ const router = Router();
 
 router.get("/get-all-visit", getAdminAllVisit);
 
-router.post("/create-visit",  createVisit);
+router.post("/create-visit", verifyJWT, createVisit);
 
 router.get('/get-all-visits-count',  getAllVisitsCount);
 
