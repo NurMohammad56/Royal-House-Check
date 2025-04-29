@@ -45,6 +45,10 @@ const visitSchema = new Schema({
             type: String,
             trim: true
         },
+        issueDate: {
+            type: Date,
+            default: Date.now
+        },
         type: {
             type: String,
         },
