@@ -3,7 +3,7 @@ import { Visit } from "../model/visit.model.js"
 import { cloudinaryUploadImage, cloudinaryUploadVideo } from "../utils/cloudinary.utils.js";
 
 export const addIssue = async (req, res, next) => {
-    const { email, place, issue, type, notes } = req.body;
+    const { email, place, issue, type, notes, issueDate } = req.body;
 
     try {
         // Find the user by email to get their ID
@@ -56,6 +56,7 @@ export const addIssue = async (req, res, next) => {
             issues: [{
                 place,
                 issue,
+                issueDate,
                 type: type || "warning",
                 media,
                 notes
