@@ -65,7 +65,7 @@ export const getAllVisitsService = async (page, limit, status, res) => {
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).populate({path: "client staff", select:"fullname email"}).sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).populate({ path: "client staff", select: "fullname email" }).sort({ date: 1 }).lean()
 
     return res.status(200).json({
         status: true,
@@ -174,7 +174,7 @@ export const getPastVisitsService = async (page, limit, client, res) => {
     };
 
     const visits = await Visit.find(query)
-        .populate({path: "client staff", select: "fullname email"})
+        .populate({ path: "client staff", select: "fullname email" })
         .sort({ date: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit))
@@ -195,35 +195,38 @@ export const getPastVisitsService = async (page, limit, client, res) => {
     });
 };
 
-export const getUpcomingVisitsService = async (page, limit, res) => {
+export const getUpcomingVisitsService = async (page, limit, client) => {
+    try {
+        const query = {
+            status: { $in: ["pending"] },  // Note: $in expects an array
+            client: client
+        };
 
-    const visits = await Visit.find({
-        status: { $in: "pending"}
-    })
-        .populate({path: "client", select: "-sessions -refreshToken"})
-        .sort({ date: 1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit));
+        const visits = await Visit.find(query)
+            .populate({ path: "client", select: "-sessions -refreshToken" })
+            .sort({ date: 1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit));
 
-    const total = await Visit.countDocuments({
-        status: { $in: "pending"}
-    });
+        const total = await Visit.countDocuments(query);
 
-    return res.status(200).json({
-        status: true,
-        message: "Upcoming visits fetched successfully",
-        data: visits,
-        pagination: {
-            currentPage: Number(page),
-            totalPages: Math.ceil(total / limit),
-            totalItems: total,
-            itemsPerPage: Number(limit)
-        }
-    });
+        return {
+            status: true,
+            message: "Upcoming visits fetched successfully",
+            data: visits,
+            pagination: {
+                currentPage: Number(page),
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                itemsPerPage: Number(limit)
+            }
+        };
+    } catch (error) {
+        throw error;
+    }
 }
-
 export const updateVisitService = async (body, id) => {
-    
+
 
     // Validate visit ID
     const visit = mongoose.Types.ObjectId.isValid(id) && await Visit.findById(id).select("status");
@@ -250,9 +253,8 @@ export const updateVisitService = async (body, id) => {
 
     const updatedVisit = await Visit.findByIdAndUpdate(id, body, { new: true })
         .select("-createdAt -updatedAt -__v")
-        .populate({path: "client staff", select: "-sessions -refreshToken"});
+        .populate({ path: "client staff", select: "-sessions -refreshToken" });
 
     return updatedVisit;
 };
-
 

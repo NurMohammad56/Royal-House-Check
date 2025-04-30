@@ -47,49 +47,74 @@ export const getAllVisits = async (req, res, next) => {
 }
 
 export const getAllVisitForSpecificClient = async (req, res, next) => {
-    const client = req.user._id;
-    const search = req.query.search?.trim().toLowerCase() || "";
-    const status = req.query.status?.trim().toLowerCase() || null;
-    const type = req.query.type?.trim().toLowerCase() || null;
+    const clientId = req.user._id;
+    const search = req.query.search?.trim() || "";
+    const status = req.query.status?.trim() || null;
+    const type = req.query.type?.trim() || null;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    if (!client) {
+    if (!clientId) {
         return res.status(400).json({ success: false, message: "clientId is required" });
     }
 
     try {
-        const filterQuery = { client };
+        // Build the base filter query
+        const filterQuery = { client: clientId };
 
-        if (status) filterQuery.status = new RegExp(`^${status}$`, 'i');
-        if (type) filterQuery.type = new RegExp(`^${type}$`, 'i');
+        // Add status and type filters if provided
+        if (status) {
+            filterQuery.status = { $regex: `^${status}$`, $options: 'i' };
+        }
+        if (type) {
+            filterQuery.type = { $regex: `^${type}$`, $options: 'i' };
+        }
 
-        const visits = await Visit.find(filterQuery)
-            .populate("client staff plan addsOnService");
+        // Build search conditions if search term exists
+        let searchConditions = [];
+        if (search) {
+            const searchRegex = { $regex: search, $options: 'i' };
+            searchConditions = [
+                { "client.fullname": searchRegex },
+                { "staff.fullname": searchRegex },
+                { type: searchRegex },
+                { status: searchRegex },
+                { visitCode: searchRegex }
+            ];
+        }
 
-        const filtered = visits.filter(v => {
-            const clientName = v.client?.fullname?.toLowerCase() || "";
-            const staffName = v.staff?.fullname?.toLowerCase() || "";
-            const visitType = v.type?.toLowerCase() || "";
-            const visitStatus = v.status?.toLowerCase() || "";
-            const visitCode = v.visitCode?.toLowerCase() || "";
-
-            const matchesSearch = search
-                ? clientName.includes(search) ||
-                staffName.includes(search) ||
-                visitType.includes(search) ||
-                visitStatus.includes(search) ||
-                visitCode.includes(search)
-                : true;
-
-            return matchesSearch;
-        });
-
-        const totalItems = filtered.length;
+        // First, get the total count for pagination
+        const countQuery = { ...filterQuery };
+        if (search) {
+            countQuery.$or = searchConditions;
+        }
+        const totalItems = await Visit.countDocuments(countQuery);
         const totalPages = Math.ceil(totalItems / limit);
-        const paginatedVisits = filtered.slice(skip, skip + limit);
 
+        // Main query to get visits
+        let visitsQuery = Visit.find(filterQuery)
+            .skip(skip)
+            .limit(limit)
+            .lean(); // Convert to plain JS object
+
+        // Apply search conditions if they exist
+        if (search) {
+            visitsQuery = visitsQuery.or(searchConditions);
+        }
+
+        // Populate related data
+        visitsQuery = visitsQuery.populate([
+            { path: 'client', select: '_id fullname' },
+            { path: 'staff', select: '_id fullname' },
+            { path: 'plan' },
+            { path: 'addsOnService' }
+        ]);
+
+        // Execute the query
+        const visits = await visitsQuery.exec();
+
+        // Prepare metadata
         const meta = {
             currentPage: page,
             totalPages,
@@ -99,15 +124,13 @@ export const getAllVisitForSpecificClient = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            data: paginatedVisits,
+            data: visits,
             meta
         });
-
     } catch (error) {
         next(error);
     }
 };
-
 export const getConfirmedVisits = async (req, res, next) => {
 
     const client = req.user._id
@@ -201,19 +224,17 @@ export const getPastVisits = async (req, res, next) => {
 }
 
 export const getUpcomingVisits = async (req, res, next) => {
-    const client = req.user._id
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
+    const client = req.user._id;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
     try {
-        await getUpcomingVisitsService(page, limit, client, res)
-    }
-
-    catch (error) {
-        next(error)
+        const result = await getUpcomingVisitsService(page, limit, client);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
     }
 }
-
 export const getNextVisit = async (req, res, next) => {
     const client = req.user._id
 

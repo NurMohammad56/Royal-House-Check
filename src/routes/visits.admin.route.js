@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAdminAllVisit, getSpecificVisit, createVisit, getAllVisitsCount, getCancelledVisits, getCompletedVisitsPagination, getCompletedVisits, getConfirmedVisits, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues, getPastVisits, getAllPendingVisits } from "../controller/visits.admin.controller.js";
+import { getAdminAllVisit, getSpecificVisit, createVisit, getAllVisitsCount, getEmails, getCancelledVisits, getCompletedVisitsPagination, getCompletedVisits, getConfirmedVisits, getUpcomingVisits, updateVisit, updateVisitStaff, getCompletedVisitsWithIssues, getAllPendingVisits } from "../controller/visits.admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
 
@@ -8,6 +8,8 @@ const router = Router();
 router.get("/get-all-visit", getAdminAllVisit);
 
 router.post("/create-visit", verifyJWT, createVisit);
+
+router.get('/get-emails', verifyJWT, getEmails);
 
 router.get('/get-all-visits-count',  getAllVisitsCount);
 
@@ -23,7 +25,7 @@ router.get('/get-completed-visits-with-issues/:client',  getCompletedVisitsWithI
 
 router.get('/get-cancelled-visits/:client',  getCancelledVisits)
 
-router.get('/get-past-visits/:client', verifyJWT, isAdmin, getPastVisits)
+// router.get('/get-past-visits/:client', verifyJWT, isAdmin, getPastVisits)
 
 // router.get('/get-visits-type/:type', verifyJWT, isAdmin, getVisitsByType)
 
