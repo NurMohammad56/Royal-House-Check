@@ -395,3 +395,44 @@ export const getSpecificVisit = async (req, res, next) => {
         next(error)
     }
 }
+
+export const getEmails = async (req, res, next) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+  
+      const visits = await Visit.find({
+        status: { $in: ["confirmed", "pending"] }
+      })
+        .populate({
+          path: "client",
+          select: "email" 
+        }).select("-staff -address -date -type -notes -issues -cancellationReason -createdAt -updatedAt -status -isPaid -__v")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+  
+      // Count total matching visits for pagination
+      const total = await Visit.countDocuments({
+        status: { $in: ["confirmed", "pending"] }
+      });
+  
+      // Calculate total pages
+      const totalPages = Math.ceil(total / limit);
+  
+      return res.status(200).json({
+        success: true,
+        data: visits,
+        meta: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };

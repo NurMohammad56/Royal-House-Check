@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
 const visitSchema = new Schema({
+    visitId: {
+        type: String,
+        unique: true,
+        trim: true
+    },
     client: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -81,5 +86,27 @@ const visitSchema = new Schema({
     }
 
 }, { timestamps: true })
+
+// Pre-save hook to generate visitId
+visitSchema.pre('save', async function(next) {
+    if (!this.visitId) {
+        let isUnique = false;
+        let generatedId;
+        
+        while (!isUnique) {
+            // Generate a 6-digit random number
+            generatedId = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Check if this ID already exists
+            const existingVisit = await this.constructor.findOne({ visitId: generatedId });
+            if (!existingVisit) {
+                isUnique = true;
+            }
+        }
+        
+        this.visitId = generatedId;
+    }
+    next();
+});
 
 export const Visit = mongoose.model("Visit", visitSchema);
