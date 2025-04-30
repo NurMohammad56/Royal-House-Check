@@ -4,7 +4,8 @@ const visitSchema = new Schema({
     visitId: {
         type: String,
         unique: true,
-        trim: true
+        trim: true,
+        immutable: true,
     },
     client: {
         type: Schema.Types.ObjectId,
@@ -87,17 +88,17 @@ const visitSchema = new Schema({
 
 }, { timestamps: true })
 
-// Pre-save hook to generate visitId
+// Pre-save hook to generate visitId only for new documents
 visitSchema.pre('save', async function(next) {
-    if (!this.visitId) {
+    if (this.isNew && !this.visitId) {
         let isUnique = false;
         let generatedId;
         
         while (!isUnique) {
-            // Generate a 6-digit random number
-            generatedId = Math.floor(100000 + Math.random() * 900000).toString();
+            // Generate 3-digit random number (100-999)
+            generatedId = Math.floor(100 + Math.random() * 900).toString();
             
-            // Check if this ID already exists
+            // Check for existing visit with this ID
             const existingVisit = await this.constructor.findOne({ visitId: generatedId });
             if (!existingVisit) {
                 isUnique = true;
@@ -105,6 +106,16 @@ visitSchema.pre('save', async function(next) {
         }
         
         this.visitId = generatedId;
+    }
+    next();
+});
+
+visitSchema.pre(['updateOne', 'findOneAndUpdate'], async function(next) {
+    const update = this.getUpdate();
+    
+    if (update.visitId) {
+        delete update.visitId;
+        delete update.$set?.visitId;
     }
     next();
 });
