@@ -17,7 +17,7 @@ router.get("/metrics/revenue-growth", verifyJWT, isAdmin, getRevenueGrowthContro
 router.get("/metrics/recent-user-activity", verifyJWT, isAdmin, getRecentUserActivityController);
 
 // User managements
-router.get("/all-user", verifyJWT, isAdmin, getAllUsers);
+router.get("/all-user",  getAllUsers);
 router.get("/user-by-role-status/:role/:status", verifyJWT, isAdmin, getUserByRoleStatus);
 router.get("/all-staff", verifyJWT, isAdmin, getAllStaff);
 router.post("/add-user", verifyJWT, isAdmin, addUser)

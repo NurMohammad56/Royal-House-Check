@@ -1,13 +1,50 @@
 import { User } from "../model/user.model.js";
 
 // Admin functionality
-export const getAllUsers = async (_, res, next) => {
+// export const getAllUsers = async (_, res, next) => {
+//   try {
+//     const users = await User.find({}, "id fullname email role status lastActive");
+//     return res.status(200).json({
+//       status: true,
+//       message: "Fetched all users",
+//       data: users,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching users:", error);
+//     next(error);
+//   }
+// };
+
+// Admin functionality
+export const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find({}, "id fullname email role status lastActive");
+    // Get pagination parameters from query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count of users
+    const totalItems = await User.countDocuments({});
+    
+    // Get paginated users
+    const users = await User.find({}, "id fullname email role status lastActive")
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
+
     return res.status(200).json({
       status: true,
       message: "Fetched all users",
       data: users,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+        itemsPerPage: limit
+      }
     });
   } catch (error) {
     console.error("Error fetching users:", error);
