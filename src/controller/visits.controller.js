@@ -74,25 +74,6 @@ export const updateVisitStatus = async (req, res, next) => {
   }
 }
 
-// export const activeVisitClientInfo = async (req, res, next) => {
-//   try {
-//     const activeVisit = await Visit.find({
-//       status: 'confirmed',
-//     }).populate('client', 'email')
-
-
-//     res.status(200).json({
-//       status: true,
-//       data: activeVisit,
-//     })
-//   } catch (error) {
-//     res.status(500).json({
-//       status: false,
-//       message: 'Internal server error!',
-//     })
-//   }
-// }
-
 export const activeVisitClientInfo = async (req, res, next) => {
   try {
     // Get pagination parameters from query
@@ -105,7 +86,7 @@ export const activeVisitClientInfo = async (req, res, next) => {
 
     // Get paginated visits
     const activeVisits = await Visit.find({ status: 'confirmed' })
-      .populate('client', 'fullname')
+      .populate('client', 'fullname email')
       .populate('staff', 'fullname')
       .skip(skip)
       .limit(limit)
