@@ -105,7 +105,8 @@ export const activeVisitClientInfo = async (req, res, next) => {
 
     // Get paginated visits
     const activeVisits = await Visit.find({ status: 'confirmed' })
-      .populate('client', 'email')
+      .populate('client', 'fullname')
+      .populate('staff', 'fullname')
       .skip(skip)
       .limit(limit)
       .lean()
