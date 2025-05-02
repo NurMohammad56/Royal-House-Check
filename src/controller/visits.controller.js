@@ -74,18 +74,59 @@ export const updateVisitStatus = async (req, res, next) => {
   }
 }
 
+// export const activeVisitClientInfo = async (req, res, next) => {
+//   try {
+//     const activeVisit = await Visit.find({
+//       status: 'confirmed',
+//     }).populate('client', 'email')
+
+
+//     res.status(200).json({
+//       status: true,
+//       data: activeVisit,
+//     })
+//   } catch (error) {
+//     res.status(500).json({
+//       status: false,
+//       message: 'Internal server error!',
+//     })
+//   }
+// }
+
 export const activeVisitClientInfo = async (req, res, next) => {
   try {
-    const activeVisit = await Visit.find({
-      status: 'confirmed',
-    }).populate('client', 'email')
+    // Get pagination parameters from query
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
 
+    // Get total count of confirmed visits
+    const totalItems = await Visit.countDocuments({ status: 'confirmed' })
 
+    // Get paginated visits
+    const activeVisits = await Visit.find({ status: 'confirmed' })
+      .populate('client', 'email')
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit)
+
+    // Return response with pagination
     res.status(200).json({
       status: true,
-      data: activeVisit,
+      message: 'Active visits fetched successfully',
+      data: activeVisits,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+        itemsPerPage: limit,
+      },
     })
   } catch (error) {
+    console.error('Error fetching active visits:', error)
     res.status(500).json({
       status: false,
       message: 'Internal server error!',
