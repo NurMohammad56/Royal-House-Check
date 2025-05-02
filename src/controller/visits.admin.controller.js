@@ -37,6 +37,7 @@ export const createVisit = async (req, res, next) => {
             status: "confirmed", // Ensure status is included
             isPaid: true,
         };
+        console.log("first", visitData)
 
         // Call the service
         const response = await createVisitService(visitData, client._id);
