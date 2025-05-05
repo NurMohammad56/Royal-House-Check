@@ -18,24 +18,25 @@ export const createPaymentIntent = async (req, res, next) => {
 
     const amountInCents = Math.round(amount * 100)
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Plan Purchase',
-            },
-            unit_amount: amountInCents,
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    mode: 'payment',
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Plan Purchase',
           },
-          quantity: 1,
+          unit_amount: amountInCents,
         },
-      ],
-      success_url: `${process.env.FRONTEND_URL}/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
-    })
+        quantity: 1,
+      },
+    ],
+    success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.FRONTEND_URL}/cancel?session_id={CHECKOUT_SESSION_ID}`,
+  })
+
 
     // Create pending payment record
     await Payment.create({
