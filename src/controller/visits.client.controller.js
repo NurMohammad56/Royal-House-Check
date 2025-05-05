@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { Payment } from "../model/payment.model.js"
 import { Visit } from "../model/visit.model.js"
 import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
@@ -55,7 +56,7 @@ export const getAllVisitForSpecificClient = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    if (!clientId) {
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
         return res.status(400).json({ success: false, message: "clientId is required" });
     }
 
