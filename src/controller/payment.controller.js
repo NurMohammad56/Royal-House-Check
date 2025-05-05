@@ -33,8 +33,8 @@ export const createPaymentIntent = async (req, res, next) => {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+      success_url: `${process.env.FRONTEND_URL}/success`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
     })
 
     // Create pending payment record
@@ -78,9 +78,13 @@ export const checkPaymentStatus = async (req, res, next) => {
       paymentStatus = 'completed'
     }
 
+    // Get the real transaction ID from session
+    const paymentIntentId = session.payment_intent
+
     const payment = await Payment.findOneAndUpdate(
       { transactionId: sessionId },
       {
+        transactionId: paymentIntentId, 
         status: paymentStatus,
         paymentDate: paymentStatus === 'completed' ? Date.now() : undefined,
       },
@@ -103,6 +107,7 @@ export const checkPaymentStatus = async (req, res, next) => {
     next(error)
   }
 }
+
 
 export const getAllPayments = async (req, res, next) => {
   try {
