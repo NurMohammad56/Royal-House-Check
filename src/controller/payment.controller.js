@@ -147,18 +147,33 @@ export const getAllPayments = async (req, res, next) => {
 export const userAllPayment = async (req, res, next) => {
   try {
     const { userId } = req.params
+    const { page = 1, limit = 10 } = req.query
+
     if (!userId) {
       return res
         .status(400)
         .json({ status: false, message: 'User id is required.' })
     }
 
-    const payments = await Payment.find({ user: userId }).populate({ path: 'user', select: 'fullname' }).populate({ path: "plan", select: "name price pack status" }).sort({ createdAt: -1 })
+    const payments = await Payment.find({ user: userId })
+      .populate({ path: 'user', select: 'fullname' })
+      .populate({ path: 'plan', select: 'name price pack status' })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+
+    const total = await Payment.countDocuments({ user: userId })
 
     return res.status(200).json({
       status: true,
       message: 'User payments fetched successfully',
       data: payments,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: Number(limit),
+      },
     })
   } catch (error) {
     next(error)
