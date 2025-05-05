@@ -1,4 +1,3 @@
-import { AddsOnService } from "../model/addsOnService.model.js";
 import { Plan } from "../model/plan.model.js";
 
 export const addPlan = async (req, res, next) => {
