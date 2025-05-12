@@ -18,43 +18,33 @@ export const addPlan = async (req, res, next) => {
 };
 
 export const getAllPlans = async (_, res, next) => {
-
     try {
-        const plans = await Plan.find().lean();
-
-        // const populatedPlans = await Promise.all(
-        //     plans.map(async (plan) => {
-        //         const populatedAddOns = await AddsOnService.find({
-        //             _id: { $in: plan.addsOnServices }
-        //         })
-        //             .select("-__v -createdAt -updatedAt -planId")
-        //             .lean()
-
-        //         return {
-        //             ...plan,
-        //             addsOnServices: populatedAddOns
-        //         };
-        //     })
-        // );
+        const plans = await Plan.find()
+            .populate({
+                path: 'addsOnServices',
+                select: '-__v -createdAt -updatedAt'
+            })
+            .lean();
 
         return res.status(200).json({
             status: true,
             message: "Plans fetched successfully",
             data: plans
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 };
 
 export const getAPlan = async (req, res, next) => {
-
     const { id } = req.params;
 
     try {
         const plan = await Plan.findById(id)
+            .populate({
+                path: 'addsOnServices',
+                select: '-__v -createdAt -updatedAt'
+            });
 
         if (!plan) {
             return res.status(404).json({
@@ -68,9 +58,7 @@ export const getAPlan = async (req, res, next) => {
             message: "Plan fetched successfully",
             data: plan
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 }
