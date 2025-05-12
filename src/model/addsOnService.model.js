@@ -14,7 +14,7 @@ const addsOnServiceSchema = new Schema({
     description: {
         type: String,
         trim: true
-    }
+    },
 }, { timestamps: true });
 
 export const AddsOnService = mongoose.model("AddsOnService", addsOnServiceSchema);
