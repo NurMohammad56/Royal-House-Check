@@ -1,5 +1,6 @@
 import { AddsOnService } from "../model/addsOnService.model.js";
 import { Plan } from "../model/plan.model.js";
+import { UserPlan } from '../model/userPlan.models.js';
 
 
 export const createAddsOnService = async (req, res, next) => {
@@ -75,59 +76,6 @@ export const deleteAddsOnService = async (req, res, next) => {
     }
 };
 
-export const addServiceToPlan = async (req, res, next) => {
-    const { planId, serviceId } = req.params;
-
-    try {
-        // Find the plan and verify the service exists
-        const plan = await Plan.findById(planId);
-        const service = await AddsOnService.findById(serviceId);
-
-        if (!plan || !service) {
-            return res.status(404).json({
-                status: false,
-                message: "Plan or Service not found"
-            });
-        }
-
-        // Check if service is already added
-        if (plan.addsOnServices.includes(serviceId)) {
-            return res.status(400).json({
-                status: false,
-                message: "Service already added to this plan"
-            });
-        }
-
-        // Add service to the plan
-        plan.addsOnServices.push(serviceId);
-        await plan.save();
-
-        // Return the updated plan with calculated total
-        const populatedPlan = await Plan.findById(planId)
-            .populate('addsOnServices', 'name price');
-
-        const totalAmount = populatedPlan.price +
-            populatedPlan.addsOnServices.reduce((sum, service) => sum + service.price, 0);
-
-        return res.status(200).json({
-            status: true,
-            message: "Service added to plan successfully",
-            data: {
-                plan: {
-                    _id: populatedPlan._id,
-                    name: populatedPlan.name,
-                    basePrice: populatedPlan.price,
-                    totalAmount,
-                    pack: populatedPlan.pack,
-                    services: populatedPlan.addsOnServices
-                }
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
 export const removeServiceFromPlan = async (req, res, next) => {
     const { planId, serviceId } = req.params;
 
@@ -162,13 +110,77 @@ export const removeServiceFromPlan = async (req, res, next) => {
     }
 };
 
-export const getPlanWithTotal = async (req, res, next) => {
-    const { planId } = req.params;
+export const addServiceToPlan = async (req, res, next) => {
+    const { planId, serviceId } = req.params;
+
+    const userId = req.user._id;
+
+
+    try {
+        // Verify plan and service exist
+        const plan = await Plan.findById(planId);
+        const service = await AddsOnService.findById(serviceId);
+
+        if (!plan || !service) {
+            return res.status(404).json({
+                status: false,
+                message: "Plan or Service not found"
+            });
+        }
+
+        // Find or create user plan configuration
+        let userPlan = await UserPlan.findOne({ user: userId, plan: planId });
+
+        if (!userPlan) {
+            userPlan = await UserPlan.create({
+                user: userId,
+                plan: planId,
+                addOnServices: []
+            });
+        }
+
+        // Check if service is already added
+        if (userPlan.addOnServices.includes(serviceId)) {
+            return res.status(400).json({
+                status: false,
+                message: "Service already added to your plan"
+            });
+        }
+
+        // Add service to user's plan configuration
+        userPlan.addOnServices.push(serviceId);
+        await userPlan.save();
+
+        // Calculate total
+        const addOnServices = await AddsOnService.find({ _id: { $in: userPlan.addOnServices } });
+        const totalAmount = plan.price + addOnServices.reduce((sum, service) => sum + service.price, 0);
+
+        return res.status(200).json({
+            status: true,
+            message: "Service added to your plan successfully",
+            data: {
+                plan: {
+                    _id: plan._id,
+                    name: plan.name,
+                    price: plan.price,
+                    pack: plan.pack
+                },
+                addOnServices: await AddsOnService.find({ _id: { $in: userPlan.addOnServices } }),
+                totalAmount
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getUserPlanConfiguration = async (req, res, next) => {
+    const {  planId } = req.params;
+
+    const userId = req.user._id;
 
     try {
         const plan = await Plan.findById(planId)
-            .populate('addsOnServices', 'name price description');
-
         if (!plan) {
             return res.status(404).json({
                 status: false,
@@ -176,14 +188,19 @@ export const getPlanWithTotal = async (req, res, next) => {
             });
         }
 
+        const userPlan = await UserPlan.findOne({ user: userId, plan: planId })
+            .populate('addOnServices', 'name price description');
+
+        const addOnServices = userPlan?.addOnServices || [];
         const totalAmount = plan.price +
-            plan.addsOnServices.reduce((sum, service) => sum + service.price, 0);
+            addOnServices.reduce((sum, service) => sum + service.price, 0);
 
         return res.status(200).json({
             status: true,
-            message: "Plan with total amount fetched successfully",
+            message: "User plan configuration fetched successfully",
             data: {
-                ...plan.toObject(),
+                plan,
+                addOnServices,
                 totalAmount
             }
         });
