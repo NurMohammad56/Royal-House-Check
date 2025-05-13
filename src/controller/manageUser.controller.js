@@ -18,21 +18,28 @@ import { User } from "../model/user.model.js";
 // Admin functionality
 export const getAllUsers = async (req, res, next) => {
   try {
-    // Get pagination parameters from query
+    // Pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Get total count of users
-    const totalItems = await User.countDocuments({});
-    
-    // Get paginated users
-    const users = await User.find({}, "id fullname email role status lastActive")
+    // Filters from query
+    const { role, status } = req.query;
+
+    // Build dynamic filter object
+    const filter = {};
+    if (role) filter.role = role;
+    if (status) filter.status = status;
+
+    // Get total count based on filters
+    const totalItems = await User.countDocuments(filter);
+
+    // Get filtered & paginated users
+    const users = await User.find(filter, "id fullname email role status lastActive")
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / limit);
 
     return res.status(200).json({
@@ -41,8 +48,8 @@ export const getAllUsers = async (req, res, next) => {
       data: users,
       pagination: {
         currentPage: page,
-        totalPages: totalPages,
-        totalItems: totalItems,
+        totalPages,
+        totalItems,
         itemsPerPage: limit
       }
     });
@@ -51,6 +58,7 @@ export const getAllUsers = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // Get user by role and status (Admin functionality)
 export const getUserByRoleStatus = async (req, res, next) => {
@@ -158,15 +166,15 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-export const getAllStaff = async (req, res, next) => {  
+export const getAllStaff = async (req, res, next) => {
   try {
-      const staff = await User.find({ role: "staff" }).select("-sessions -refreshToken").lean()
-      return res.status(200).json({
-          status: true,
-          message: "Staff fetched successfully",
-          data: staff
-      })
+    const staff = await User.find({ role: "staff" }).select("-sessions -refreshToken").lean()
+    return res.status(200).json({
+      status: true,
+      message: "Staff fetched successfully",
+      data: staff
+    })
   } catch (error) {
-      next(error)
+    next(error)
   }
 }
