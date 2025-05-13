@@ -82,9 +82,13 @@ export const checkPaymentStatus = async (req, res, next) => {
       paymentStatus = 'completed'
     }
 
+    // Get the real transaction ID from session
+    const paymentIntentId = session.payment_intent
+
     const payment = await Payment.findOneAndUpdate(
       { transactionId: sessionId },
       {
+        transactionId: paymentIntentId, 
         status: paymentStatus,
         paymentDate: paymentStatus === 'completed' ? Date.now() : undefined,
       },
@@ -107,6 +111,7 @@ export const checkPaymentStatus = async (req, res, next) => {
     next(error)
   }
 }
+
 
 export const getAllPayments = async (req, res, next) => {
   try {
