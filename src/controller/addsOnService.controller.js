@@ -175,7 +175,7 @@ export const addServiceToPlan = async (req, res, next) => {
 };
 
 export const getUserPlanConfiguration = async (req, res, next) => {
-    const {  planId } = req.params;
+    const { planId } = req.params;
 
     const userId = req.user._id;
 
