@@ -18,7 +18,8 @@ const paymentSchema = new Schema({
     },
     userPlan: {
         type: Schema.Types.ObjectId,
-        ref: "UserPlan",    },
+        ref: "UserPlan",    
+    },
     amount: {
         type: Number,
         required: true,
