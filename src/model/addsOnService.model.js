@@ -1,20 +1,26 @@
 import mongoose, { Schema } from "mongoose";
 
-const addsOnServiceSchema = new Schema({
+const addsOnServiceSchema = new Schema(
+  {
     name: {
-        type: String,
+      type: String,
     },
     price: {
-        type: Number,
+      type: Number,
     },
     pack: {
-        type: String,
-        enum: ["weekly", "monthly", "daily", "patrols", "incidents", "visit"]
+      type: String,
+      enum: ["weekly", "monthly", "daily", "patrol", "incident", "visit"],
     },
     description: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
-export const AddsOnService = mongoose.model("AddsOnService", addsOnServiceSchema);
+export const AddsOnService = mongoose.model(
+  "AddsOnService",
+  addsOnServiceSchema
+);
