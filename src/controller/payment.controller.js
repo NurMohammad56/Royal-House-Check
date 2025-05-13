@@ -112,27 +112,31 @@ export const checkPaymentStatus = async (req, res, next) => {
 
 export const getAllPayments = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status } = req.query
-    const query = {}
+    const { page = 1, limit = 10, status } = req.query;
+    const query = {};
 
     if (status) {
-      query.status = status
+      query.status = status;
     }
 
     const payments = await Payment.find(query)
       .populate({
         path: 'user',
-        select: 'fullname', // Populate only the user's name
+        select: 'fullname',
       })
       .populate({
         path: 'plan',
-        select: 'name price pack status', // Populate specific fields from the plan
+        select: 'name price pack status',
+      })
+      .populate({
+        path: 'addOnServices',
+        select: 'name price description',
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit))
+      .limit(Number(limit));
 
-    const total = await Payment.countDocuments(query)
+    const total = await Payment.countDocuments(query);
 
     return res.status(200).json({
       status: true,
@@ -144,31 +148,42 @@ export const getAllPayments = async (req, res, next) => {
         totalItems: total,
         itemsPerPage: Number(limit),
       },
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const userAllPayment = async (req, res, next) => {
   try {
-    const { userId } = req.params
-    const { page = 1, limit = 10 } = req.query
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
 
     if (!userId) {
-      return res
-        .status(400)
-        .json({ status: false, message: 'User id is required.' })
+      return res.status(400).json({
+        status: false,
+        message: 'User id is required.'
+      });
     }
 
     const payments = await Payment.find({ user: userId })
-      .populate({ path: 'user', select: 'fullname' })
-      .populate({ path: 'plan', select: 'name price pack status' })
+      .populate({
+        path: 'user',
+        select: 'fullname'
+      })
+      .populate({
+        path: 'plan',
+        select: 'name price pack status'
+      })
+      .populate({
+        path: 'addOnServices',
+        select: 'name price description',
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit))
+      .limit(Number(limit));
 
-    const total = await Payment.countDocuments({ user: userId })
+    const total = await Payment.countDocuments({ user: userId });
 
     return res.status(200).json({
       status: true,
@@ -180,40 +195,51 @@ export const userAllPayment = async (req, res, next) => {
         totalItems: total,
         itemsPerPage: Number(limit),
       },
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
-// get a payment by id
 export const getPaymentById = async (req, res, next) => {
   try {
-    const { paymentId } = req.params
+    const { paymentId } = req.params;
+
     if (!paymentId) {
       return res.status(400).json({
         status: false,
         message: 'Payment ID is required',
-      })
+      });
     }
 
     const payment = await Payment.findById(paymentId)
-      .populate({ path: 'user', select: 'fullname' }).populate({ path: "plan", select: "name price pack status" })
-      .lean()
+      .populate({
+        path: 'user',
+        select: 'fullname'
+      })
+      .populate({
+        path: 'plan',
+        select: 'name price pack status'
+      })
+      .populate({
+        path: 'addOnServices',
+        select: 'name price description',
+      })
+      .lean();
 
     if (!payment) {
       return res.status(404).json({
         status: false,
         message: 'Payment not found',
-      })
+      });
     }
 
     return res.status(200).json({
       status: true,
       message: 'Payment fetched successfully',
       data: payment,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-} 
+};
