@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { io } from "../../server.js";
 import { Message } from "../model/message.model.js";
 // import { io } from "../utils/socket.utils.js";
