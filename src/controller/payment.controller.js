@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { Payment } from '../model/payment.model.js'
 import { STRIPE_SECRET_KEY } from '../config/config.js'
 import moment from 'moment'
+import { UserPlan } from '../model/userPlan.models.js'
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
 
@@ -36,6 +37,8 @@ export const createPaymentIntent = async (req, res, next) => {
       success_url: `${process.env.FRONTEND_URL}/payment/success`,
       cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
     })
+    
+    const userPlanDetails = await UserPlan.find({user: userId, plan: planId}).sort({ createdAt: -1 })
 
     // Create pending payment record
     await Payment.create({
@@ -44,6 +47,7 @@ export const createPaymentIntent = async (req, res, next) => {
       amount,
       transactionId: session.id,
       paymentMethod: 'stripe',
+      userPlan: userPlanDetails[0]._id,
       status: 'pending',
     })
 

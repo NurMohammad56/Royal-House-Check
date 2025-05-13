@@ -9,7 +9,7 @@ const addsOnServiceSchema = new Schema({
     },
     pack: {
         type: String,
-        enum: ["weekly", "monthly", "daily"]
+        enum: ["weekly", "monthly", "daily", "patrols", "incidents", "visit"]
     },
     description: {
         type: String,
