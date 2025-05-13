@@ -109,17 +109,24 @@ export const getAllIssues = async (req, res, next) => {
 // get all visits associated with issues
 export const getAllVisitsWithIssues = async (req, res, next) => {
     try {
-        const visits = await Visit.find({ "issues.0": { $exists: true } });
+        const userId = req.user._id;
+
+
+        const visits = await Visit.find({
+            user: userId,
+            "issues.0": { $exists: true }
+        });
+
         if (!visits || visits.length === 0) {
             return res.status(404).json({
                 status: false,
-                message: "No visits found"
+                message: "No visits with issues found for this user"
             });
         }
 
         return res.status(200).json({
             status: true,
-            message: "Visits fetched successfully",
+            message: "Visits with issues fetched successfully",
             data: visits
         });
     }
