@@ -53,28 +53,28 @@ app.use(errorHandler);
 //   io.use((socket, next) => {
 //     const token = socket.handshake.query.token;
 //     if (!token) return next(new Error("Authentication required"));
-  
+
 //     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
 //       if (err) return next(new Error("Authentication error"));
 //       socket.userId = decoded.id;
 //       next();
 //     });
 //   });
-  
+
 //   io.on("connection", (socket) => {
 //     // console.log(`User connected: ${socket.handshake.query.chatId}`);
-  
+
 //     // Join a private room using user ID
 //     socket.on("joinRoom", (roomId) => {
 //       socket.join(roomId.toString());
 //       console.log(`User ${socket.userId} joined room: ${roomId}`);
 //     });
 //     // socket.join(socket.handshake.query.chatId);
-  
+
 //     socket.on("sendMessage", (message) => {
 //       console.log(message);
 //     });
-  
+
 //     socket.on("disconnect", () => {
 //       console.log(`User disconnected: ${socket.userId}`);
 //     });
@@ -93,7 +93,7 @@ async function startServer() {
   io.use((socket, next) => {
     const token = socket.handshake.query.token;
     if (!token) return next(new Error("Authentication required"));
-  
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) return next(new Error("Authentication error"));
       socket.userId = decoded.id;
@@ -117,14 +117,10 @@ async function startServer() {
   });
 }
 
-
 // server.listen(5001, () => {
 //   console.log("Server and Socket.IO listening on port 5001");
 // });
 
-
-
 export { io, server };
-
 
 startServer();
