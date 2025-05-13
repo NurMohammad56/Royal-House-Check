@@ -16,11 +16,9 @@ const paymentSchema = new Schema({
         ref: "Plan",
         required: true,
     },
-    addOnServices: [{
+    userPlan: {
         type: Schema.Types.ObjectId,
-        ref: "AddsOnService",
-        default: null
-    }],
+        ref: "UserPlan",    },
     amount: {
         type: Number,
         required: true,

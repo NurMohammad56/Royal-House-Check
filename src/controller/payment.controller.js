@@ -129,19 +129,32 @@ export const getAllPayments = async (req, res, next) => {
         select: 'name price pack status',
       })
       .populate({
-        path: 'addOnServices',
-        select: 'name price description',
+        path: 'userPlan',
+        select: 'addOnServices',
+        populate: {
+          path: 'addOnServices',
+          select: 'name price description'
+        }
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
+
+    // Transform the data to include addOnServices directly in the payment object
+    const transformedPayments = payments.map(payment => {
+      const paymentObj = payment.toObject();
+      return {
+        ...paymentObj,
+        addOnServices: paymentObj.userPlan?.addOnServices || []
+      };
+    });
 
     const total = await Payment.countDocuments(query);
 
     return res.status(200).json({
       status: true,
       message: 'Payments fetched successfully',
-      data: payments,
+      data: transformedPayments,
       pagination: {
         currentPage: Number(page),
         totalPages: Math.ceil(total / limit),
@@ -176,19 +189,32 @@ export const userAllPayment = async (req, res, next) => {
         select: 'name price pack status'
       })
       .populate({
-        path: 'addOnServices',
-        select: 'name price description',
+        path: 'userPlan',
+        select: 'addOnServices',
+        populate: {
+          path: 'addOnServices',
+          select: 'name price description'
+        }
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
+
+    // Transform the data
+    const transformedPayments = payments.map(payment => {
+      const paymentObj = payment.toObject();
+      return {
+        ...paymentObj,
+        addOnServices: paymentObj.userPlan?.addOnServices || []
+      };
+    });
 
     const total = await Payment.countDocuments({ user: userId });
 
     return res.status(200).json({
       status: true,
       message: 'User payments fetched successfully',
-      data: payments,
+      data: transformedPayments,
       pagination: {
         currentPage: Number(page),
         totalPages: Math.ceil(total / limit),
@@ -222,8 +248,12 @@ export const getPaymentById = async (req, res, next) => {
         select: 'name price pack status'
       })
       .populate({
-        path: 'addOnServices',
-        select: 'name price description',
+        path: 'userPlan',
+        select: 'addOnServices',
+        populate: {
+          path: 'addOnServices',
+          select: 'name price description'
+        }
       })
       .lean();
 
@@ -234,10 +264,16 @@ export const getPaymentById = async (req, res, next) => {
       });
     }
 
+    // Transform the data
+    const transformedPayment = {
+      ...payment,
+      addOnServices: payment.userPlan?.addOnServices || []
+    };
+
     return res.status(200).json({
       status: true,
       message: 'Payment fetched successfully',
-      data: payment,
+      data: transformedPayment,
     });
   } catch (error) {
     next(error);
