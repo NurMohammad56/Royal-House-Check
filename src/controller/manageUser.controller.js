@@ -24,12 +24,20 @@ export const getAllUsers = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     // Filters from query
-    const { role, status } = req.query;
+    const { role, status, search } = req.query;
 
     // Build dynamic filter object
     const filter = {};
     if (role) filter.role = role;
     if (status) filter.status = status;
+
+    // Add search filter (search by fullname or email)
+    if (search) {
+      filter.$or = [
+        { fullname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
+    }
 
     // Get total count based on filters
     const totalItems = await User.countDocuments(filter);
@@ -58,6 +66,7 @@ export const getAllUsers = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 // Get user by role and status (Admin functionality)
