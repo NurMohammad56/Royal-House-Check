@@ -125,14 +125,14 @@ export const getAdminAllVisit = async (req, res, next) => {
             const staffName = v.staff?.fullname?.toLowerCase() || "";
             const visitType = v.type?.toLowerCase() || "";
             const visitStatus = v.status?.toLowerCase() || "";
-            const visitCode = v.visitCode?.toLowerCase() || "";
+            const visitId = v.visitId?.toLowerCase() || "";
 
             const matchesSearch = search
                 ? clientName.includes(search) ||
                 staffName.includes(search) ||
                 visitType.includes(search) ||
                 visitStatus.includes(search) ||
-                visitCode.includes(search)
+                visitId.includes(search)
                 : true;
 
             const matchesStatus = status ? visitStatus === status : true;
@@ -344,14 +344,14 @@ export const updateVisit = async (req, res, next) => {
         await Notification.create({
             userId: updatedVisit.client._id,
             type: "visit update",
-            message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
+            message: `Visit log updated for ${updatedVisit.visitId} (${formattedDate})`,
         });
 
         if (updatedVisit.staff) {
             await Notification.create({
                 userId: updatedVisit.staff._id,
                 type: "visit update",
-                message: `Visit log updated for ${updatedVisit.visitCode} (${formattedDate})`,
+                message: `Visit log updated for ${updatedVisit.visitId} (${formattedDate})`,
             });
         }
 

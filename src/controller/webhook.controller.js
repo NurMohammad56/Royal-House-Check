@@ -67,7 +67,7 @@ async function handleSuccessfulPayment(paymentIntent) {
     const adminNotifications = adminUsers.map(admin => ({
         userId: admin._id,
         type: "payment",
-        message: `Payment of $${(paymentIntent.amount/100).toFixed(2)} succeeded for visit ${payment.visit.visitCode}`,
+        message: `Payment of $${(paymentIntent.amount/100).toFixed(2)} succeeded for visit ${payment.visit.visitId}`,
         relatedEntity: payment._id,
         relatedEntityModel: "Payment",
         metadata: {
