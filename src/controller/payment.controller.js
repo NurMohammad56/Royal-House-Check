@@ -1,7 +1,6 @@
 import Stripe from 'stripe'
 import { Payment } from '../model/payment.model.js'
 import { STRIPE_SECRET_KEY } from '../config/config.js'
-import moment from 'moment'
 import { UserPlan } from '../model/userPlan.models.js'
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
@@ -37,19 +36,22 @@ export const createPaymentIntent = async (req, res, next) => {
       success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/cancel?session_id={CHECKOUT_SESSION_ID}`,
     })
-    
-    const userPlanDetails = await UserPlan.find({user: userId, plan: planId}).sort({ createdAt: -1 })
+
+    const userPlanDetails = await UserPlan.find({ user: userId, plan: planId }).sort({ createdAt: -1 })
 
     // Create pending payment record
+    const latestUserPlan = userPlanDetails[0] ? userPlanDetails[0]._id : null;
+
     await Payment.create({
       user: userId,
       plan: planId,
       amount,
       transactionId: session.id,
       paymentMethod: 'stripe',
-      userPlan: userPlanDetails[0]._id,
+      userPlan: latestUserPlan,
       status: 'pending',
-    })
+    });
+
 
     return res.status(200).json({
       status: true,
@@ -88,7 +90,7 @@ export const checkPaymentStatus = async (req, res, next) => {
     const payment = await Payment.findOneAndUpdate(
       { transactionId: sessionId },
       {
-        transactionId: paymentIntentId, 
+        transactionId: paymentIntentId,
         status: paymentStatus,
         paymentDate: paymentStatus === 'completed' ? Date.now() : undefined,
       },
