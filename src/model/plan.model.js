@@ -20,6 +20,11 @@ const planSchema = new Schema({
         required: true,
         enum: ["weekly", "monthly", "daily", "per-patrol"]
     },
+    type: {
+        type: String,
+        required: true,
+        enum: ["flexible", "tiered"]
+    },
     description: {
         type: String,
         required: true,
