@@ -6,6 +6,11 @@ const planSchema = new Schema({
         required: true,
         trim: true
     },
+    subTitle: {
+        type: String,
+        required: true,
+        trim: true
+    },
     price: {
         type: Number,
         required: true
@@ -13,7 +18,7 @@ const planSchema = new Schema({
     pack: {
         type: String,
         required: true,
-        enum: ["weekly", "monthly", "daily"]
+        enum: ["weekly", "monthly", "daily", "per-patrol"]
     },
     description: {
         type: String,
