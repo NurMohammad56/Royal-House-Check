@@ -13,7 +13,7 @@ const router = express.Router();
 
 // Metrics
 router.get('/metrics', getAdminMetricsAndRevenueController);
-router.get("/metrics/revenue-growth", verifyJWT, isAdmin, getRevenueGrowthController);
+router.get("/metrics/revenue-growth",  getRevenueGrowthController);
 router.get("/metrics/recent-user-activity", verifyJWT, isAdmin, getRecentUserActivityController);
 
 // User managements
