@@ -10,9 +10,10 @@ import {
   getRecentUserActivity,
   countInactiveUsers,
   completedVisitCount as getCompletedVisitCount,
-  confirmedVisitCount as getConfirmedVisitCount
-} from "../services/adminMatrics.services.js";
-import { Visit } from "../model/visit.model.js";
+  confirmedVisitCount as getConfirmedVisitCount,
+} from '../services/adminMatrics.services.js'
+import { Visit } from '../model/visit.model.js'
+import { Payment } from '../model/payment.model.js'
 
 export const getAdminMetricsAndRevenueController = async (_, res, next) => {
   try {
@@ -26,7 +27,7 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
       pendingVisits,
       monthlyRevenue,
       completedVisitCount,
-      confirmedVisitCount
+      confirmedVisitCount,
     ] = await Promise.all([
       totalUser(),
       totalAdmin(),
@@ -34,15 +35,15 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
       getActiveUsersCount(),
       countInactiveUsers(),
       Visit.countDocuments({}),
-      Visit.countDocuments({ status: "pending" }),
+      Visit.countDocuments({ status: 'pending' }),
       getMonthlyRevenue(),
       getCompletedVisitCount(),
       getConfirmedVisitCount(),
-    ]);
+    ])
 
     return res.status(200).json({
       status: true,
-      message: "Admin metrics and monthly revenue fetched successfully",
+      message: 'Admin metrics and monthly revenue fetched successfully',
       data: {
         totalUsers,
         totalAdmins,
@@ -53,99 +54,143 @@ export const getAdminMetricsAndRevenueController = async (_, res, next) => {
         pendingVisits,
         monthlyRevenue,
         completedVisitCount,
-        confirmedVisitCount
-      }
-    });
+        confirmedVisitCount,
+      },
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 // controllers/revenueController.js
 export const getRevenueGrowthController = async (req, res, next) => {
   try {
-    const { range = "7d" } = req.query;
+    const { range = '7d' } = req.query
 
-    let matchStage = { status: "completed" };
-    let groupStage = {};
-    let projectStage = {};
-    let formatDate = {};
+    let data
 
-    const today = new Date();
-    let startDate;
-
-    if (range === "1d") {
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - 1);
-      formatDate = { $dateToString: { format: "%Y-%m-%d", date: "$paymentDate" } };
-    } else if (range === "7d") {
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - 6);
-      formatDate = { $dateToString: { format: "%Y-%m-%d", date: "$paymentDate" } };
-    } else if (range === "30d") {
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - 29);
-      formatDate = { $dateToString: { format: "%Y-%m-%d", date: "$paymentDate" } };
-    } else if (range === "1y") {
-      startDate = new Date(today);
-      startDate.setFullYear(today.getFullYear() - 1);
-      formatDate = { $dateToString: { format: "%Y-%m", date: "$paymentDate" } };
+    if (range === '1d') {
+      data = await generateDailyRevenueData(1)
+    } else if (range === '7d') {
+      data = await generateDailyRevenueData(7)
+    } else if (range === '30d') {
+      data = await generateDailyRevenueData(30)
+    } else if (range === '1y') {
+      data = await generateMonthlyRevenueData(12)
     } else {
       return res.status(400).json({
         status: false,
-        message: "Invalid range. Use '1d', '7d', '30d', or '1y'."
-      });
+        message: "Invalid range. Use '1d', '7d', '30d', or '1y'.",
+      })
     }
 
-    // Add date filter
-    matchStage.paymentDate = { $gte: startDate };
-
-    // Group by day or month depending on range
-    groupStage = {
-      _id: formatDate,
-      totalRevenue: { $sum: "$amount" },
-    };
-
-    // Format the response
-    projectStage = {
-      _id: 0,
-      date: "$_id",
-      revenue: { $round: ["$totalRevenue", 2] }
-    };
-
-    const data = await Payment.aggregate([
-      { $match: matchStage },
-      { $group: groupStage },
-      { $project: projectStage },
-      { $sort: { date: 1 } }
-    ]);
-
-    return res.json({
+    res.json({
       status: true,
-      message: "Revenue growth data fetched successfully",
-      data
-    });
-
+      message: 'Revenue growth data fetched successfully',
+      data,
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
+// -----------------------------
+// 📊 Daily Revenue Generator
+// -----------------------------
+async function generateDailyRevenueData(days) {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - (days - 1))
+
+  const payments = await Payment.aggregate([
+    {
+      $match: {
+        status: 'completed',
+        paymentDate: { $gte: startDate },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$paymentDate' },
+        },
+        revenue: { $sum: '$amount' },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ])
+
+  const data = []
+  for (let i = 0; i < days; i++) {
+    const date = new Date()
+    date.setDate(date.getDate() - (days - i - 1))
+    const dateStr = date.toISOString().split('T')[0]
+
+    const found = payments.find((p) => p._id === dateStr)
+    data.push({
+      date: dateStr,
+      revenue: found ? parseFloat(found.revenue.toFixed(2)) : 0,
+    })
+  }
+
+  return data
+}
+
+// -----------------------------
+// 📅 Monthly Revenue Generator
+// -----------------------------
+async function generateMonthlyRevenueData(months) {
+  const startDate = new Date()
+  startDate.setMonth(startDate.getMonth() - (months - 1))
+  startDate.setDate(1) 
+
+  const payments = await Payment.aggregate([
+    {
+      $match: {
+        status: 'completed',
+        paymentDate: { $gte: startDate },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: '%Y-%m', date: '$paymentDate' },
+        },
+        revenue: { $sum: '$amount' },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ])
+
+  const data = []
+  const today = new Date()
+  for (let i = 0; i < months; i++) {
+    const date = new Date()
+    date.setMonth(today.getMonth() - (months - i - 1))
+    const dateStr = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, '0')}`
+
+    const found = payments.find((p) => p._id === dateStr)
+    data.push({
+      date: dateStr,
+      revenue: found ? parseFloat(found.revenue.toFixed(2)) : 0,
+    })
+  }
+
+  return data
+}
 
 
 export const getRecentUserActivityController = async (req, res, next) => {
   try {
-
-    const recentActivity = await getRecentUserActivity();
+    const recentActivity = await getRecentUserActivity()
 
     return res.json({
       status: true,
-      message: "Recent user activity fetched successfully",
-      data: recentActivity
-    });
+      message: 'Recent user activity fetched successfully',
+      data: recentActivity,
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
-
-
