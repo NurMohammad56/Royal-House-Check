@@ -113,11 +113,12 @@ export const getAdminAllVisit = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    
 
     try {
         // Fetch all visits with population
         const allVisits = await Visit.find()
-            .populate({path: "client staff", select:"fullname email"})
+            .populate({path: "client staff", select:"fullname email"}).sort({ createdAt: -1 })
 
         // Filter by search and status
         let filtered = allVisits.filter(v => {

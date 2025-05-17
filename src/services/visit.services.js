@@ -42,7 +42,7 @@ export const getAllVisitsService = async (page, limit, status, res) => {
         const visits = await Visit.find(query) 
             .populate("client", "name email")   
             .populate("staff", "name position")
-            .sort({ date: 1 })
+            .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .lean();
@@ -66,7 +66,7 @@ export const getAllVisitsService = async (page, limit, status, res) => {
 //get visits by status
 export const getVisits = async (client, status, res) => {
 
-    const visits = await Visit.find({ client, status }).populate({ path: "client staff", select: "fullname email" }).sort({ date: 1 }).lean()
+    const visits = await Visit.find({ client, status }).populate({ path: "client staff", select: "fullname email" }).sort({ createdAt: -1}).lean()
 
     return res.status(200).json({
         status: true,
@@ -82,7 +82,7 @@ export const getVisitsPagination = async (page, limit, client, status, res) => {
         status
     })
         .populate("client staff")
-        .sort({ date: 1 })
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit))
         .lean()
