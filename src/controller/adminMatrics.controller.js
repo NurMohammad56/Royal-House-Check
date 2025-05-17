@@ -1,5 +1,3 @@
-import { Payment } from "../model/payment.model.js";
-
 import {
   getMonthlyRevenue,
   totalUser,
