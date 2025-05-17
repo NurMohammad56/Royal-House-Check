@@ -81,7 +81,7 @@ export const getAllVisitForSpecificClient = async (req, res, next) => {
                 { "staff.fullname": searchRegex },
                 { type: searchRegex },
                 { status: searchRegex },
-                { visitCode: searchRegex }
+                { visitId: searchRegex }
             ];
         }
 

@@ -5,12 +5,15 @@ const addsOnServiceSchema = new Schema(
     name: {
       type: String,
     },
-    price: {
+    flexiblePrice: {
+      type: Number,
+    },
+    tieredPrice: {
       type: Number,
     },
     pack: {
       type: String,
-      enum: ["weekly", "monthly", "daily", "patrol", "incident", "visit"],
+      enum: ["weekly", "monthly", "daily", "per-patrol", "incident", "visit"],
     },
     description: {
       type: String,
