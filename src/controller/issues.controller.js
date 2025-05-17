@@ -41,7 +41,7 @@ export const addIssue = async (req, res, next) => {
         if (cloudinaryVideo?.secure_url) media.push({ type: "video", url: cloudinaryVideo.secure_url });
 
         // Create a new Visit document with the SAME visitId
-        const newVisit = await Visit.create({
+        const newVisit = await Visit.findByIdAndUpdate({_id: existingVisit._id}, {
             visitId: existingVisit.visitId, // Keep the same visitId
             client: existingVisit.client,
             staff: existingVisit.staff || null,
@@ -62,7 +62,7 @@ export const addIssue = async (req, res, next) => {
             isPaid: existingVisit.isPaid || false,
             plan: existingVisit.plan,
             addsOnService: existingVisit.addsOnService
-        });
+        },{new:true});
 
         // Populate client and staff fields
         const populatedVisit = await Visit.findById(newVisit._id)
