@@ -39,8 +39,9 @@ export const getAllVisitsService = async (page, limit, status, res) => {
 
         const total = await Visit.countDocuments(query);
 
-        const visits = await Visit.find(query)
-            .populate("client staff")
+        const visits = await Visit.find(query) 
+            .populate("client", "name email")   
+            .populate("staff", "name position")
             .sort({ date: 1 })
             .skip((page - 1) * limit)
             .limit(limit)
@@ -232,7 +233,7 @@ export const updateVisitService = async (updateData, id) => {
 
     const existingVisit = await Visit.findById(id)
         .select("status date client");
-    
+
     if (!existingVisit) {
         throw new Error("Visit not found");
     }
@@ -247,7 +248,7 @@ export const updateVisitService = async (updateData, id) => {
             date: visitDate,
             client: existingVisit.client,
             status: { $in: ["pending", "confirmed"] },
-            _id: { $ne: id } 
+            _id: { $ne: id }
         });
 
         if (duplicateVisit) {
@@ -260,7 +261,7 @@ export const updateVisitService = async (updateData, id) => {
         updateData,
         {
             new: true,
-            runValidators: true, 
+            runValidators: true,
             select: "-createdAt -updatedAt -__v"
         }
     ).populate([

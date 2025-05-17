@@ -88,31 +88,34 @@ const visitSchema = new Schema({
 
 }, { timestamps: true })
 
+visitSchema.index({ status: 1, date: 1 });
+
+
 // Pre-save hook to generate visitId only for new documents
-visitSchema.pre('save', async function(next) {
+visitSchema.pre('save', async function (next) {
     if (this.isNew && !this.visitId) {
         let isUnique = false;
         let generatedId;
-        
+
         while (!isUnique) {
             // Generate 3-digit random number (100-999)
             generatedId = Math.floor(100 + Math.random() * 900).toString();
-            
+
             // Check for existing visit with this ID
             const existingVisit = await this.constructor.findOne({ visitId: generatedId });
             if (!existingVisit) {
                 isUnique = true;
             }
         }
-        
+
         this.visitId = generatedId;
     }
     next();
 });
 
-visitSchema.pre(['updateOne', 'findOneAndUpdate'], async function(next) {
+visitSchema.pre(['updateOne', 'findOneAndUpdate'], async function (next) {
     const update = this.getUpdate();
-    
+
     if (update.visitId) {
         delete update.visitId;
         delete update.$set?.visitId;
