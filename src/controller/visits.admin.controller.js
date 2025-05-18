@@ -17,7 +17,6 @@ export const createVisit = async (req, res, next) => {
             });
         }
 
-        // Find the client by email
         const client = await User.findOne({ email: clientEmail });
         if (!client) {
             return res.status(404).json({
@@ -26,7 +25,18 @@ export const createVisit = async (req, res, next) => {
             });
         }
 
-        // Prepare visit data
+        const activeVisit = await Visit.findOne({
+            client: client._id,
+            status: { $in: ["pending", "confirmed"] },
+        });
+
+        if (activeVisit) {
+            return res.status(400).json({
+                status: false,
+                message: "Client already has an active visit (pending or confirmed).",
+            });
+        }
+
         const visitData = {
             client: client._id,
             staff,
@@ -34,12 +44,10 @@ export const createVisit = async (req, res, next) => {
             address,
             date,
             note,
-            status: "confirmed", // Ensure status is included
+            status: "confirmed",
             isPaid: true,
         };
-        console.log("first", visitData)
 
-        // Call the service
         const response = await createVisitService(visitData, client._id);
 
         const formattedDate = new Date(date).toLocaleString("en-US", {
@@ -52,14 +60,12 @@ export const createVisit = async (req, res, next) => {
             hour12: true,
         });
 
-        // Notify client
         await Notification.create({
             userId: client._id,
             type: "visit schedule",
             message: `Visit scheduled for ${formattedDate}`,
         });
 
-        // Notify staff
         if (staff) {
             await Notification.create({
                 userId: staff,
@@ -73,6 +79,7 @@ export const createVisit = async (req, res, next) => {
             message: "Visit created successfully",
             data: response,
         });
+
     } catch (error) {
         next(error);
     }
@@ -113,12 +120,12 @@ export const getAdminAllVisit = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
 
     try {
         // Fetch all visits with population
         const allVisits = await Visit.find()
-            .populate({path: "client staff", select:"fullname email"}).sort({ createdAt: -1 })
+            .populate({ path: "client staff", select: "fullname email" }).sort({ createdAt: -1 })
 
         // Filter by search and status
         let filtered = allVisits.filter(v => {
@@ -184,17 +191,17 @@ export const getConfirmedVisits = async (req, res, next) => {
 
 //admin gets all pending visits for
 export const getAllPendingVisits = async (req, res, next) => {
- try {
-    const response  = await Visit.find({ status: "pending" })
-    return res.status(200).json({
-        status: true,
-        message: "Pending visits fetched successfully",
-        data: response
-    })
- } catch (error) {
-    next(error)
-    
- }
+    try {
+        const response = await Visit.find({ status: "pending" })
+        return res.status(200).json({
+            status: true,
+            message: "Pending visits fetched successfully",
+            data: response
+        })
+    } catch (error) {
+        next(error)
+
+    }
 
 }
 
@@ -272,7 +279,7 @@ export const getPastVisits = async (req, res, next) => {
 
 //admin gets all upcoming visits for a client
 export const getUpcomingVisits = async (req, res, next) => {
-    
+
     const page = Number(req.query.page) || 1
     const limit = Number(req.query.limit) || 10
 
@@ -312,15 +319,15 @@ export const updateVisit = async (req, res, next) => {
 
         const updatedVisit = await Visit.findByIdAndUpdate(
             id,
-            { 
-                staff, 
-                type, 
-                notes, 
-                status: "confirmed" 
+            {
+                staff,
+                type,
+                notes,
+                status: "confirmed"
             },
-            { 
-                new: true, 
-                runValidators: true 
+            {
+                new: true,
+                runValidators: true
             }
         ).populate('client', 'email').populate('staff', 'email');
 
@@ -379,13 +386,13 @@ export const updateVisitStaff = async (req, res, next) => {
 
         const visit = await Visit.findByIdAndUpdate(
             id,
-            { 
-                staff, 
-                status: "confirmed" 
+            {
+                staff,
+                status: "confirmed"
             },
-            { 
-                new: true, 
-                runValidators: true 
+            {
+                new: true,
+                runValidators: true
             }
         ).lean();
 
@@ -406,11 +413,11 @@ export const updateVisitStaff = async (req, res, next) => {
     }
 }
 export const getSpecificVisit = async (req, res, next) => {
-    const { id } = req.params   
-    
+    const { id } = req.params
+
     try {
         const visit = await Visit.findById(id)
-            .populate({path: "client staff", select: "-sessions -refreshToken"})
+            .populate({ path: "client staff", select: "-sessions -refreshToken" })
             .sort({ createdAt: -1 })
             .lean()
         if (!visit) {
@@ -432,41 +439,41 @@ export const getSpecificVisit = async (req, res, next) => {
 
 export const getEmails = async (req, res, next) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const skip = (page - 1) * limit;
-  
-      const visits = await Visit.find({
-        status: { $in: ["confirmed", "pending"] }
-      })
-        .populate({
-          path: "client",
-          select: "email" 
-        }).select("-staff -address -date -type -notes -issues -cancellationReason -createdAt -updatedAt -status -isPaid -__v")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean();
-  
-      // Count total matching visits for pagination
-      const total = await Visit.countDocuments({
-        status: { $in: ["confirmed", "pending"] }
-      });
-  
-      // Calculate total pages
-      const totalPages = Math.ceil(total / limit);
-  
-      return res.status(200).json({
-        success: true,
-        data: visits,
-        meta: {
-          currentPage: page,
-          totalPages,
-          totalItems: total,
-          itemsPerPage: limit
-        }
-      });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const visits = await Visit.find({
+            status: { $in: ["confirmed", "pending"] }
+        })
+            .populate({
+                path: "client",
+                select: "email"
+            }).select("-staff -address -date -type -notes -issues -cancellationReason -createdAt -updatedAt -status -isPaid -__v")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        // Count total matching visits for pagination
+        const total = await Visit.countDocuments({
+            status: { $in: ["confirmed", "pending"] }
+        });
+
+        // Calculate total pages
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json({
+            success: true,
+            data: visits,
+            meta: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit
+            }
+        });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  };
+};

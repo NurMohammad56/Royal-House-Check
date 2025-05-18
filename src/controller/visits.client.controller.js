@@ -4,34 +4,51 @@ import { Visit } from "../model/visit.model.js"
 import { createVisitService, getAllVisitsService, getCompletedVisitsWithIssuesService, getPastVisitsService, getUpcomingVisitsService, getVisits, getVisitsPagination, updateVisitService } from "../services/visit.services.js"
 
 export const createVisit = async (req, res, next) => {
-
-    const { address, date } = req.body
-    const client = req.user._id
+    const { address, date } = req.body;
+    const client = req.user._id;
 
     try {
         if (!address || !date) {
             return res.status(400).json({
                 status: false,
                 message: "Please provide all required fields"
-            })
+            });
         }
 
-        const isPaid = await Payment.findOne({ user: client }).select("status")
+        const existingActiveVisit = await Visit.findOne({
+            client,
+            status: { $in: ["pending", "confirmed"] }
+        });
 
-        const visitData = await createVisitService({ address, date, isPaid: isPaid?.status == "completed" ? true : false, status: "pending" }, client, res)
+        if (existingActiveVisit) {
+            return res.status(400).json({
+                status: false,
+                message: "You already have an active visit. Please complete it before creating a new one."
+            });
+        }
+
+        const isPaid = await Payment.findOne({ user: client }).select("status");
+
+        const visitData = await createVisitService(
+            {
+                address,
+                date,
+                isPaid: isPaid?.status === "completed",
+                status: "pending"
+            },
+            client,
+            res
+        );
 
         return res.status(201).json({
             status: true,
             message: "Visit created successfully",
             data: visitData
-        })
+        });
+    } catch (error) {
+        next(error);
     }
-
-    catch (error) {
-        next(error)
-    }
-}
-
+};
 export const getAllVisits = async (req, res, next) => {
 
     const client = req.user._id
